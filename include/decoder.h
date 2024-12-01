@@ -6,5 +6,6 @@
 #include <png.h>
 
 std::string decodeMessageFromPNG(const std::string& imagePath);
+bool decodeFileFromPNG(const std::string& imagePath, const std::string& outputFilePath);
 
 #endif

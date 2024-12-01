@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
+#include <fstream> 
 
 void encodeMessageInPNG(const std::string& inputImagePath, const std::string& outputImagePath, const std::string& message) {
     // Open input file with RAII
@@ -188,4 +189,21 @@ void savePNG(const char* outputPath, std::vector<png_bytep>& rows, int width, in
         std::cerr << "Exception: " << e.what() << std::endl;
         return;
     }
+}
+
+
+bool encodeFileInPNG(const std::string& inputImagePath, const std::string& outputImagePath, const std::string& inputFilePath) {
+    // Read the content of the input file
+    std::ifstream inFile(inputFilePath, std::ios::binary);
+    if (!inFile) {
+        std::cerr << "Error: Unable to open file " << inputFilePath << std::endl;
+        return false;
+    }
+    std::string fileContent((std::istreambuf_iterator<char>(inFile)),
+                             std::istreambuf_iterator<char>());
+    inFile.close();
+
+    // Proceed to encode the message into the PNG
+    encodeMessageInPNG(inputImagePath, outputImagePath, fileContent);
+    return true;
 }

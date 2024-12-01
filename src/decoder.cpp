@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
+#include <fstream> 
 
 std::string decodeMessageFromPNG(const std::string& imagePath) {
     // Open file with RAII
@@ -116,4 +117,21 @@ std::string decodeMessageFromPNG(const std::string& imagePath) {
         std::cerr << "Exception: " << e.what() << std::endl;
         return "";
     }
+}
+
+bool decodeFileFromPNG(const std::string& imagePath, const std::string& outputFilePath) {
+    std::string decodedMessage = decodeMessageFromPNG(imagePath);
+    if (decodedMessage.empty()) {
+        return false;
+    }
+
+    // Write the decoded message to the output file
+    std::ofstream outFile(outputFilePath, std::ios::binary);
+    if (!outFile) {
+        std::cerr << "Error: Unable to open output file " << outputFilePath << std::endl;
+        return false;
+    }
+    outFile.write(decodedMessage.data(), decodedMessage.size());
+    outFile.close();
+    return true;
 }
