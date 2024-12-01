@@ -1,0 +1,19 @@
+name: cppgroup
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - cmake
+  - ninja
+  - make
+  - clang
+  - doxygen
+  - pip 
+  - numpy
+  - scipy
+  - matplotlib        # G++ compiler (for Linux)        # Clang++ compiler (for macOS)# Optional: If you plan to use libmpg123
+  - boost=1.80.0           # Optional: For additional C++ utilities
+  - pip:
+    - breathe
+    - sphinx

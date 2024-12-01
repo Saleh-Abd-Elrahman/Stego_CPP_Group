@@ -1,1 +1,1 @@
-# Stego_CPP_Group
+# CPPSteganography
