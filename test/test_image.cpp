@@ -5,17 +5,17 @@
 
 
 int main() {
-    std::string inputImagePath = "../images/input.png";
-    std::string outputImagePath = "../images/output.png";
+    std::string inputImagePath = "../images/input.jpg";
+    std::string outputImagePath = "../images/output.jpg";
     std::string message = "Hello, this is a hidden message!";
 
     // Encode the message into the image
     std::cout << "Encoding message into PNG..." << std::endl;
-    encodeMessageInPNG(inputImagePath, outputImagePath, message);
+    encodeMessageInJPEG(inputImagePath, outputImagePath, message);
 
     // Decode the message from the encoded image
     std::cout << "Decoding message from PNG..." << std::endl;
-    std::string decodedMessage = decodeMessageFromPNG(outputImagePath);
+    std::string decodedMessage = decodeMessageFromJPEG(outputImagePath);
 
     // Check if the decoded message matches the original message
     if (decodedMessage == message) {

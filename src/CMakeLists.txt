@@ -1,6 +1,6 @@
 # Find and include PNG
-find_package(PNG REQUIRED)
-include_directories(${PNG_INCLUDE_DIRS})
+find_package(JPEG REQUIRED)
+include_directories(${JPEG_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Compile the main library first (encoder and decoder)
@@ -16,5 +16,5 @@ add_executable(my_executable main.cpp)
 set_target_properties(my_executable PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/project)
 
 # Link the main library and PNG to the executable
-target_link_libraries(my_executable main_library ${PNG_LIBRARIES})
-target_link_libraries(main_library ${PNG_LIBRARIES}) 
+target_link_libraries(my_executable main_library ${JPEG_LIBRARIES})
+target_link_libraries(main_library ${JPEG_LIBRARIES}) 

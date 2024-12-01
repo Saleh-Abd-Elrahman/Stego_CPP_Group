@@ -1,137 +1,117 @@
 #include "decoder.h"
-#include <png.h>
+#include <jpeglib.h>
 #include <iostream>
+#include <fstream>
 #include <vector>
-#include <memory>
-#include <stdexcept>
-#include <fstream> 
+#include <cstdio>
 
-std::string decodeMessageFromPNG(const std::string& imagePath) {
-    // Open file with RAII
-    auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
-    std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(imagePath.c_str(), "rb"), fileDeleter);
-    if (!fp) {
+bool decodeFileFromJPEG(const std::string& imagePath, const std::string& outputFilePath) {
+    // Open input JPEG file
+    FILE* infile = fopen(imagePath.c_str(), "rb");
+    if (!infile) {
         std::cerr << "Error: Unable to open file " << imagePath << std::endl;
-        return "";
-    }
-
-    // Create png read struct with RAII
-    class PngReader {
-    public:
-        PngReader() {
-            png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-            if (!png_ptr) {
-                throw std::runtime_error("Failed to create png_struct");
-            }
-            info_ptr = png_create_info_struct(png_ptr);
-            if (!info_ptr) {
-                png_destroy_read_struct(&png_ptr, nullptr, nullptr);
-                throw std::runtime_error("Failed to create png_info");
-            }
-        }
-        ~PngReader() {
-            if (png_ptr && info_ptr) {
-                png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
-            }
-        }
-        png_structp png_ptr = nullptr;
-        png_infop info_ptr = nullptr;
-    };
-
-    try {
-        PngReader pngReader;
-
-        if (setjmp(png_jmpbuf(pngReader.png_ptr))) {
-            std::cerr << "Error during PNG read initialization" << std::endl;
-            return "";
-        }
-
-        png_init_io(pngReader.png_ptr, fp.get());
-        png_read_info(pngReader.png_ptr, pngReader.info_ptr);
-
-        int width      = png_get_image_width(pngReader.png_ptr, pngReader.info_ptr);
-        int height     = png_get_image_height(pngReader.png_ptr, pngReader.info_ptr);
-        png_byte color_type = png_get_color_type(pngReader.png_ptr, pngReader.info_ptr);
-        png_byte bit_depth  = png_get_bit_depth(pngReader.png_ptr, pngReader.info_ptr);
-
-        // Format check
-        if (bit_depth != 8 || (color_type != PNG_COLOR_TYPE_RGB && color_type != PNG_COLOR_TYPE_RGBA)) {
-            std::cerr << "Unsupported PNG format. Only 8-bit RGB or RGBA is supported." << std::endl;
-            return "";
-        }
-
-        png_read_update_info(pngReader.png_ptr, pngReader.info_ptr);
-
-        // Allocate memory for rows using std::vector
-        std::vector<std::vector<png_byte>> imageData(height);
-        std::vector<png_bytep> rowPointers(height);
-
-        for (int y = 0; y < height; y++) {
-            imageData[y].resize(png_get_rowbytes(pngReader.png_ptr, pngReader.info_ptr));
-            rowPointers[y] = imageData[y].data();
-        }
-
-        png_read_image(pngReader.png_ptr, rowPointers.data());
-
-        // Read bits from image
-        std::string binaryData;
-        bool hasAlpha = (color_type == PNG_COLOR_TYPE_RGBA);
-
-        for (int y = 0; y < height; ++y) {
-            png_bytep row = rowPointers[y];
-            for (int x = 0; x < width; ++x) {
-                png_bytep px = &(row[x * (hasAlpha ? 4 : 3)]);
-                binaryData += (px[2] & 1) ? '1' : '0';
-            }
-        }
-
-        // Read first 32 bits to get message length
-        if (binaryData.size() < 32) {
-            std::cerr << "Error: Not enough data to read message length." << std::endl;
-            return "";
-        }
-
-        uint32_t messageLength = 0;
-        for (int i = 0; i < 32; i++) {
-            messageLength = (messageLength << 1) | (binaryData[i] - '0');
-        }
-
-        // Read message bits
-        size_t totalMessageBits = messageLength * 8;
-        if (binaryData.size() < 32 + totalMessageBits) {
-            std::cerr << "Error: Not enough data to read the entire message." << std::endl;
-            return "";
-        }
-
-        std::string binaryMessage = binaryData.substr(32, totalMessageBits);
-
-        std::string decodedMessage;
-        for (size_t i = 0; i < binaryMessage.size(); i += 8) {
-            char byte = static_cast<char>(std::stoi(binaryMessage.substr(i, 8), nullptr, 2));
-            decodedMessage += byte;
-        }
-
-        return decodedMessage;
-
-    } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
-        return "";
-    }
-}
-
-bool decodeFileFromPNG(const std::string& imagePath, const std::string& outputFilePath) {
-    std::string decodedMessage = decodeMessageFromPNG(imagePath);
-    if (decodedMessage.empty()) {
         return false;
+    }
+
+    // Initialize the JPEG decompression object
+    struct jpeg_decompress_struct srcinfo;
+    struct jpeg_error_mgr jsrcerr;
+    srcinfo.err = jpeg_std_error(&jsrcerr);
+    jpeg_create_decompress(&srcinfo);
+    jpeg_stdio_src(&srcinfo, infile);
+    jpeg_read_header(&srcinfo, TRUE);
+
+    // Read the source file's coefficient arrays
+    jvirt_barray_ptr* coef_arrays = jpeg_read_coefficients(&srcinfo);
+
+    // Extract the message
+    std::vector<bool> messageBits;
+    size_t messageLength = 0;
+    size_t bitsRead = 0;
+    bool lengthExtracted = false;
+
+    for (int compNum = 0; compNum < srcinfo.num_components; ++compNum) {
+        jpeg_component_info* compptr = srcinfo.comp_info + compNum;
+        JBLOCKARRAY coef_buffers = (srcinfo.mem->access_virt_barray)(
+            (j_common_ptr)&srcinfo, coef_arrays[compNum], 0, compptr->height_in_blocks, FALSE);
+
+        for (JDIMENSION row = 0; row < compptr->height_in_blocks; ++row) {
+            JBLOCKROW buffer = coef_buffers[row];
+            for (JDIMENSION col = 0; col < compptr->width_in_blocks; ++col) {
+                JCOEFPTR block = buffer[col];
+
+                for (int i = 1; i < DCTSIZE2; ++i) {
+                    if (block[i] != 0) {
+                        bool bit = block[i] & 1;
+                        messageBits.push_back(bit);
+                        bitsRead++;
+
+                        if (!lengthExtracted && bitsRead == 32) {
+                            // Extract message length
+                            messageLength = 0;
+                            for (size_t j = 0; j < 32; ++j) {
+                                messageLength = (messageLength << 1) | messageBits[j];
+                            }
+                            messageBits.clear();
+                            bitsRead = 0;
+                            lengthExtracted = true;
+
+                            // Optional: Check for unreasonable message length
+                            if (messageLength > (srcinfo.image_width * srcinfo.image_height * 3)) {
+                                std::cerr << "Error: Extracted message length is unreasonably large." << std::endl;
+                                jpeg_finish_decompress(&srcinfo);
+                                jpeg_destroy_decompress(&srcinfo);
+                                fclose(infile);
+                                return false;
+                            }
+                        }
+
+                        if (lengthExtracted && bitsRead == messageLength * 8) {
+                            goto END_EXTRACTION;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+END_EXTRACTION:
+
+    if (!lengthExtracted) {
+        std::cerr << "Error: Failed to extract message length." << std::endl;
+        jpeg_finish_decompress(&srcinfo);
+        jpeg_destroy_decompress(&srcinfo);
+        fclose(infile);
+        return false;
+    }
+
+    // Convert bits to bytes
+    std::vector<unsigned char> messageData;
+    for (size_t i = 0; i < messageBits.size(); i += 8) {
+        unsigned char byte = 0;
+        for (int j = 0; j < 8; ++j) {
+            byte = (byte << 1) | messageBits[i + j];
+        }
+        messageData.push_back(byte);
     }
 
     // Write the decoded message to the output file
     std::ofstream outFile(outputFilePath, std::ios::binary);
     if (!outFile) {
         std::cerr << "Error: Unable to open output file " << outputFilePath << std::endl;
+        jpeg_finish_decompress(&srcinfo);
+        jpeg_destroy_decompress(&srcinfo);
+        fclose(infile);
         return false;
     }
-    outFile.write(decodedMessage.data(), decodedMessage.size());
+    outFile.write(reinterpret_cast<char*>(messageData.data()), messageData.size());
     outFile.close();
+
+    // Finish decompression
+    jpeg_finish_decompress(&srcinfo);
+    jpeg_destroy_decompress(&srcinfo);
+
+    fclose(infile);
+
     return true;
 }
