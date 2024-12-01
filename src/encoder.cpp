@@ -5,10 +5,9 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
-#include <fstream> 
 
 void encodeMessageInPNG(const std::string& inputImagePath, const std::string& outputImagePath, const std::string& message) {
-    // Open input file with RAII
+    // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(inputImagePath.c_str(), "rb"), fileDeleter);
     if (!fp) {
@@ -16,7 +15,7 @@ void encodeMessageInPNG(const std::string& inputImagePath, const std::string& ou
         return;
     }
 
-    // Create png read struct with RAII
+    // RAII for png_struct and png_info
     class PngReader {
     public:
         PngReader() {
@@ -73,7 +72,16 @@ void encodeMessageInPNG(const std::string& inputImagePath, const std::string& ou
 
         png_read_image(pngReader.png_ptr, rowPointers.data());
 
-        // Call the function to encode the message into pixel data
+        // Check if image can hold the message
+        size_t maxCapacity = width * height; // One bit per pixel (using the blue channel's LSB)
+        size_t totalMessageBits = 32 + message.size() * 8; // 32 bits for length + message bits
+
+        if (totalMessageBits > maxCapacity) {
+            std::cerr << "Error: The image is too small to hold the entire message." << std::endl;
+            return;
+        }
+
+        // Hide the message in the image data
         hideMessageInImage(rowPointers, width, height, message, color_type == PNG_COLOR_TYPE_RGBA);
 
         // Save the modified image
@@ -83,6 +91,22 @@ void encodeMessageInPNG(const std::string& inputImagePath, const std::string& ou
         std::cerr << "Exception: " << e.what() << std::endl;
         return;
     }
+}
+
+bool encodeFileInPNG(const std::string& inputImagePath, const std::string& outputImagePath, const std::string& inputFilePath) {
+    // Read the content of the input file in binary mode
+    std::ifstream inFile(inputFilePath, std::ios::binary);
+    if (!inFile) {
+        std::cerr << "Error: Unable to open file " << inputFilePath << std::endl;
+        return false;
+    }
+    std::string fileContent((std::istreambuf_iterator<char>(inFile)),
+                             std::istreambuf_iterator<char>());
+    inFile.close();
+
+    // Proceed to encode the file content into the PNG
+    encodeMessageInPNG(inputImagePath, outputImagePath, fileContent);
+    return true;
 }
 
 void hideMessageInImage(std::vector<png_bytep>& rows, int width, int height, const std::string& message, bool hasAlpha) {
@@ -127,7 +151,7 @@ void hideMessageInImage(std::vector<png_bytep>& rows, int width, int height, con
 }
 
 void savePNG(const char* outputPath, std::vector<png_bytep>& rows, int width, int height, png_byte color_type) {
-    // Open output file with RAII
+    // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(outputPath, "wb"), fileDeleter);
     if (!fp) {
@@ -135,7 +159,7 @@ void savePNG(const char* outputPath, std::vector<png_bytep>& rows, int width, in
         return;
     }
 
-    // Create png write struct with RAII
+    // RAII for png_struct and png_info
     class PngWriter {
     public:
         PngWriter() {
@@ -189,21 +213,4 @@ void savePNG(const char* outputPath, std::vector<png_bytep>& rows, int width, in
         std::cerr << "Exception: " << e.what() << std::endl;
         return;
     }
-}
-
-
-bool encodeFileInPNG(const std::string& inputImagePath, const std::string& outputImagePath, const std::string& inputFilePath) {
-    // Read the content of the input file
-    std::ifstream inFile(inputFilePath, std::ios::binary);
-    if (!inFile) {
-        std::cerr << "Error: Unable to open file " << inputFilePath << std::endl;
-        return false;
-    }
-    std::string fileContent((std::istreambuf_iterator<char>(inFile)),
-                             std::istreambuf_iterator<char>());
-    inFile.close();
-
-    // Proceed to encode the message into the PNG
-    encodeMessageInPNG(inputImagePath, outputImagePath, fileContent);
-    return true;
 }
