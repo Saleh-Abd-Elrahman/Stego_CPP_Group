@@ -1,4 +1,5 @@
 #include "encoder.h"
+#include "vigenere.h"
 #include <png.h>
 #include <iostream>
 #include <fstream>
@@ -6,7 +7,49 @@
 #include <memory>
 #include <stdexcept>
 
-void encodeMessageInPNG(const std::string& inputImagePath, const std::string& outputImagePath, const std::string& message) {
+void encodeMessageInPNG(const std::string& inputImagePath, 
+                        const std::string& outputImagePath, 
+                        const std::string& message, 
+                        const std::string& password) {
+    // Fixed Vigenère key for password scrambling
+    const std::string vigenereKey = "VIGENEREK";
+
+    // Ensure password is exactly 8 characters
+    if (password.size() != 8) {
+        std::cerr << "Error: Password must be exactly 8 characters long." << std::endl;
+        return;
+    }
+
+    // Scramble the password using Vigenère Cipher
+    std::string scrambledPassword = encryptVigenere(password, vigenereKey);
+
+    // Combine scrambled password with the message
+    // Format: [32 bits length][64 bits scrambled password][message bits]
+    uint32_t messageLength = message.size();
+    std::string binaryLength;
+    for (int i = 31; i >= 0; i--) {
+        binaryLength += ((messageLength >> i) & 1) ? '1' : '0';
+    }
+
+    // Convert scrambled password to binary
+    std::string binaryPassword;
+    for (char c : scrambledPassword) {
+        for (int i = 7; i >= 0; i--) {
+            binaryPassword += ((c >> i) & 1) ? '1' : '0';
+        }
+    }
+
+    // Convert the message to binary
+    std::string binaryMessage;
+    for (char c : message) {
+        for (int i = 7; i >= 0; i--) {
+            binaryMessage += ((c >> i) & 1) ? '1' : '0';
+        }
+    }
+
+    // Concatenate all binary data
+    std::string fullBinaryData = binaryLength + binaryPassword + binaryMessage;
+
     // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(inputImagePath.c_str(), "rb"), fileDeleter);
@@ -54,7 +97,8 @@ void encodeMessageInPNG(const std::string& inputImagePath, const std::string& ou
         png_byte color_type = png_get_color_type(pngReader.png_ptr, pngReader.info_ptr);
         png_byte bit_depth = png_get_bit_depth(pngReader.png_ptr, pngReader.info_ptr);
 
-        if (bit_depth != 8 || (color_type != PNG_COLOR_TYPE_RGB && color_type != PNG_COLOR_TYPE_RGBA)) {
+        if (bit_depth != 8 || 
+           (color_type != PNG_COLOR_TYPE_RGB && color_type != PNG_COLOR_TYPE_RGBA)) {
             std::cerr << "Unsupported PNG format. Only 8-bit RGB or RGBA is supported." << std::endl;
             return;
         }
@@ -72,17 +116,17 @@ void encodeMessageInPNG(const std::string& inputImagePath, const std::string& ou
 
         png_read_image(pngReader.png_ptr, rowPointers.data());
 
-        // Check if image can hold the message
+        // Check if image can hold the data
         size_t maxCapacity = width * height; // One bit per pixel (using the blue channel's LSB)
-        size_t totalMessageBits = 32 + message.size() * 8; // 32 bits for length + message bits
+        size_t totalDataBits = fullBinaryData.size(); // Already includes length and password
 
-        if (totalMessageBits > maxCapacity) {
-            std::cerr << "Error: The image is too small to hold the entire message." << std::endl;
+        if (totalDataBits > maxCapacity) {
+            std::cerr << "Error: The image is too small to hold the entire data (length, password, message)." << std::endl;
             return;
         }
 
-        // Hide the message in the image data
-        hideMessageInImage(rowPointers, width, height, message, color_type == PNG_COLOR_TYPE_RGBA);
+        // Hide the data in the image
+        hideDataInImage(rowPointers, width, height, fullBinaryData, color_type == PNG_COLOR_TYPE_RGBA);
 
         // Save the modified image
         savePNG(outputImagePath.c_str(), rowPointers, width, height, color_type);
@@ -93,7 +137,10 @@ void encodeMessageInPNG(const std::string& inputImagePath, const std::string& ou
     }
 }
 
-bool encodeFileInPNG(const std::string& inputImagePath, const std::string& outputImagePath, const std::string& inputFilePath) {
+bool encodeFileInPNG(const std::string& inputImagePath, 
+                     const std::string& outputImagePath, 
+                     const std::string& inputFilePath, 
+                     const std::string& password) {
     // Read the content of the input file in binary mode
     std::ifstream inFile(inputFilePath, std::ios::binary);
     if (!inFile) {
@@ -105,29 +152,12 @@ bool encodeFileInPNG(const std::string& inputImagePath, const std::string& outpu
     inFile.close();
 
     // Proceed to encode the file content into the PNG
-    encodeMessageInPNG(inputImagePath, outputImagePath, fileContent);
+    encodeMessageInPNG(inputImagePath, outputImagePath, fileContent, password);
     return true;
 }
 
-void hideMessageInImage(std::vector<png_bytep>& rows, int width, int height, const std::string& message, bool hasAlpha) {
-    // Convert the message length to a 32-bit binary string
-    uint32_t messageLength = message.size();
-    std::string binaryLength;
-    for (int i = 31; i >= 0; i--) {
-        binaryLength += ((messageLength >> i) & 1) ? '1' : '0';
-    }
-
-    // Convert the message to binary
-    std::string binaryMessage;
-    for (char c : message) {
-        for (int i = 7; i >= 0; i--) {
-            binaryMessage += ((c >> i) & 1) ? '1' : '0';
-        }
-    }
-
-    // Concatenate length and message
-    std::string fullBinaryData = binaryLength + binaryMessage;
-
+void hideDataInImage(std::vector<png_bytep>& rows, int width, int height, 
+                    const std::string& data, bool hasAlpha) {
     size_t dataIdx = 0;
     bool dataComplete = false;
 
@@ -137,8 +167,8 @@ void hideMessageInImage(std::vector<png_bytep>& rows, int width, int height, con
             png_bytep px = &(row[x * (hasAlpha ? 4 : 3)]);
 
             // Modify LSB of the blue channel
-            if (dataIdx < fullBinaryData.size()) {
-                px[2] = (px[2] & ~1) | (fullBinaryData[dataIdx++] - '0');
+            if (dataIdx < data.size()) {
+                px[2] = (px[2] & ~1) | (data[dataIdx++] - '0');
             } else {
                 dataComplete = true;
             }
@@ -146,11 +176,12 @@ void hideMessageInImage(std::vector<png_bytep>& rows, int width, int height, con
     }
 
     if (!dataComplete) {
-        std::cerr << "Warning: The image is too small to hold the entire message." << std::endl;
+        std::cerr << "Warning: The image is too small to hold the entire data." << std::endl;
     }
 }
 
-void savePNG(const char* outputPath, std::vector<png_bytep>& rows, int width, int height, png_byte color_type) {
+void savePNG(const char* outputPath, std::vector<png_bytep>& rows, 
+            int width, int height, png_byte color_type) {
     // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(outputPath, "wb"), fileDeleter);
