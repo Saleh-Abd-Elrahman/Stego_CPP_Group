@@ -4,7 +4,7 @@ include_directories(${PNG_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Compile the main library first (encoder and decoder)
-add_library(main_library encoder.cpp decoder.cpp vigenere.cpp)
+add_library(main_library encoder.cpp decoder.cpp vigenere.cpp operations.cpp)
 
 # Include directories for the main library
 target_include_directories(main_library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
