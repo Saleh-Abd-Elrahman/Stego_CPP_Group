@@ -1,5 +1,5 @@
 #include "WAV.h"
-#include "vigenere_WAV.h"
+#include "vigenere.h"
 #include <sndfile.hh>
 #include <vector>
 #include <bitset>
