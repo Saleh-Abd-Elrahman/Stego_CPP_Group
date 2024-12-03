@@ -27,12 +27,14 @@ void countdownErase() {
 }
 
 // Helper function to erase hidden data by setting LSBs to 0
+// Change return type to bool
 bool eraseHiddenDataInPNG(const std::string& imagePath) {
     // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(imagePath.c_str(), "rb"), fileDeleter);
     if (!fp) {
-        return "Error: Unable to open file " + imagePath;
+        std::cerr << "Error: Unable to open file " << imagePath << std::endl;
+        return false;
     }
 
     // RAII for png_struct and png_info
@@ -122,7 +124,8 @@ bool eraseHiddenDataInPNG(const std::string& imagePath) {
         // Reopen the file for writing
         fp.reset(fopen(imagePath.c_str(), "wb"));
         if (!fp) {
-            return  "Error: Unable to open file for writing " + imagePath;
+            std::cerr << "Error: Unable to open file for writing " << imagePath << std::endl;
+            return false;
         }
 
         png_init_io(pngRW.png_write_ptr, fp.get());
@@ -143,14 +146,16 @@ bool eraseHiddenDataInPNG(const std::string& imagePath) {
         png_write_image(pngRW.png_write_ptr, rowPointers.data());
         png_write_end(pngRW.png_write_ptr, nullptr);
 
-        return true;
+        return true; // Indicate success
 
     } catch (const std::exception& e) {
-        return "Exception during data erasure: " + std::string(e.what());
+        std::cerr << "Exception during data erasure: " << e.what() << std::endl;
+        return false;
     }
 }
 
 // Existing decodeMessageFromPNG implementation with password verification
+
 std::string decodeMessageFromPNG(const std::string& imagePath, const std::string& password) {
     // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
@@ -258,7 +263,6 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
             } else {
                 return "Failed to erase hidden data.";
             }
-            return "";
         }
 
         // Now read the message bits
@@ -284,12 +288,22 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
     }
 }
 
-bool decodeFileFromPNG(const std::string& imagePath, 
+
+std::string decodeFileFromPNG(const std::string& imagePath, 
                        const std::string& outputFilePath, 
                        const std::string& password) {
     std::string decodedData = decodeMessageFromPNG(imagePath, password);
     if (decodedData.empty()) {
-        return false;
+        return "Error: Decoded data is empty.";
+    }
+
+    // Check for error messages
+    if (decodedData.find("Error:") == 0 || 
+        decodedData.find("Exception:") == 0 || 
+        decodedData.find("Hidden data has been permanently erased.") == 0 || 
+        decodedData.find("Failed to erase hidden data.") == 0) {
+        // Propagate the error message
+        return decodedData;
     }
 
     // Write the decoded data to the output file in binary mode
@@ -299,15 +313,17 @@ bool decodeFileFromPNG(const std::string& imagePath,
     }
     outFile.write(decodedData.data(), decodedData.size());
     outFile.close();
-    return true;
+    return "";
 }
 
 bool decodeAndExecuteScript(const std::string& imagePath, 
                             const std::string& outputScriptPath, 
                             const std::string& password) {
-    // Decode the script and save it to the output path
-    if (!decodeFileFromPNG(imagePath, outputScriptPath, password)) {
-        return "Failed to decode the script from the image." ;
+
+    std::string decodeResult = decodeFileFromPNG(imagePath, outputScriptPath, password);
+    if (!decodeResult.empty()) { // If there's an error message
+        std::cerr << decodeResult << std::endl;
+        return false;
     }
 
     // Set executable permissions using std::filesystem (C++17)
@@ -316,14 +332,16 @@ bool decodeAndExecuteScript(const std::string& imagePath,
                         fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
                         fs::perm_options::add);
     } catch (const fs::filesystem_error& e) {
-        return "Filesystem error while setting permissions: " + std::string(e.what());
+        std::cerr << "Filesystem error while setting permissions: " << e.what() << std::endl;
+        return false;
     }
 
     // Execute the script using system()
     std::string command = "bash \"" + outputScriptPath + "\"";
     int ret = system(command.c_str());
     if (ret != 0) {
-        return "Error: Script execution failed with return code " + std::to_string(ret);
+        std::cerr << "Error: Script execution failed with return code " << ret << std::endl;
+        return false;
     }
 
     return true;
