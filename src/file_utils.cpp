@@ -10,10 +10,3 @@ std::string getFileExtension(const std::string& filePath) {
     return filePath.substr(dotPosition + 1);
 }
 
-std::string getDirectoryPath(const std::string& filePath) {
-    size_t slashPosition = filePath.find_last_of("/\\");
-    if (slashPosition == std::string::npos) {
-        return ""; // No directory part found
-    }
-    return filePath.substr(0, slashPosition);
-}

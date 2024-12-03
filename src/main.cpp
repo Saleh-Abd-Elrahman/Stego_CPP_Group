@@ -50,11 +50,15 @@ private:
         switch (encodeType) {
             case MESSAGE:
                 ImGui::Text("Enter the message to encode into the target file:");
-                ImGui::InputText("Message", message, sizeof(message));
+                ImGui::InputText("Input", message, sizeof(message));
                 break;
             case TEXT_FILE:
                 ImGui::Text("Enter the path to the text file to encode into the target file:");
                 ImGui::InputText("Text File Path", textFilePath, sizeof(textFilePath));
+                break;
+            case BASH_SCRIPT:
+                ImGui::Text("Enter the path to the bash script to encode into the target file:");
+                ImGui::InputText("Bash Script Path", textFilePath, sizeof(textFilePath));
                 break;
         }
 
@@ -86,13 +90,25 @@ private:
     void HandleSubmit() {
         try {
             if (encode) {
-                if (encodeText) {
-                    string result = encodeText(filePath, textFilePath, password);
-                    output = "Text file encoded successfully: " + result;
-                } else {
-                    string result = encodeMessage(filePath, message, password);
-                    output = "Message encoded successfully: " + result;
+                string result;
+                switch(encodeType) {
+                    case MESSAGE:
+                        result = encodeMessage(filePath, message, password);
+                        output = "Message encoded successfully: " + result;
+                        break;
+                    case TEXT_FILE:
+                        result = encodeText(filePath, textFilePath, password);
+                        output = "Text file encoded successfully: " + result;
+                        break;
+                    case BASH_SCRIPT:
+                        result = encodeText(filePath, textFilePath, password);
+                        output = "Bash script encoded successfully: " + result;
+                        break;
+                    default:
+                        output = "Unknown encode type selected!";
+                        break;
                 }
+               
             } else {
                 switch (decodeType) {
                     case MESSAGE:
@@ -100,7 +116,6 @@ private:
                         break;
                     case TEXT_FILE:
                         // Construct the output file path for the decoded text file
-                        outputFilePath = getDirectoryPath(filePath) + "/output.txt";
                         if (decodeFileFromPNG(filePath, outputFilePath, password)) {
                             output = "Decoded text file saved to: " + outputFilePath;
                         } else {
@@ -109,7 +124,6 @@ private:
                         break;
                     case BASH_SCRIPT:
                         // Construct the output file path for the decoded bash script
-                        outputFilePath = getDirectoryPath(filePath) + "/script.sh";
                         if (decodeAndExecuteScript(filePath, outputFilePath, password)) {
                             output = "Decoded bash script saved to: " + outputFilePath + " and executed successfully.";
                         } else {
