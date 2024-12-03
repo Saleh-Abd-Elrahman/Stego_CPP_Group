@@ -92,16 +92,13 @@ private:
                 string result;
                 switch(encodeType) {
                     case MESSAGE:
-                        result = encodeMessage(filePath, message, password);
-                        output = "Message encoded successfully: " + result;
+                        output = encodeMessage(filePath, message, password);
                         break;
                     case TEXT_FILE:
-                        result = encodeText(filePath, textFilePath, password);
-                        output = "Text file encoded successfully: " + result;
+                        output = encodeText(filePath, textFilePath, password);
                         break;
                     case BASH_SCRIPT:
-                        result = encodeText(filePath, textFilePath, password);
-                        output = "Bash script encoded successfully: " + result;
+                        output = encodeText(filePath, textFilePath, password);
                         break;
                     default:
                         output = "Unknown encode type selected!";
@@ -115,13 +112,11 @@ private:
                         break;
                     case TEXT_FILE:
                         // Construct the output file path for the decoded text file
-                        outputFilePath = decodeFile(filePath, password);
-                        output = "Decoded text file saved to: " + outputFilePath;
+                        output = decodeFile(filePath, password);
                         break;
                     case BASH_SCRIPT:
                         // Construct the output file path for the decoded bash script
-                        outputFilePath = decodeBashScript(filePath, password);
-                        output = "Decoded bash script saved to: " + outputFilePath + " and executed successfully.";
+                        output = decodeBashScript(filePath, password);
                         break;
                     default:
                         output = "Unknown decode type selected!";

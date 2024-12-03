@@ -51,7 +51,7 @@ std::string decodeFile(const std::string& filePath, const std::string& password)
     } else if (fileExtension == "wav") {
         // Add logic for encoding text content into a WAV file
         //encodeMessageInWAV(targetFilePath, directoryPath, message, password);
-        return "Encoded text file into WAV: " + filePath;
+        return "Decoded text file saved to: " + filePath;
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
@@ -75,14 +75,14 @@ std::string decodeBashScript(const std::string& filePath, const std::string& pas
 
     if (fileExtension == "png") {
         if (decodeAndExecuteScript(filePath, outputFilePath, password)) {
-            return "Decoded text file saved to: " + outputFilePath.string();
+            return "Decoded bash script saved to: " + outputFilePath.string() + " and executed successfully.";
         } else {
-            return "Failed to decode text file.";
+            return "Failed to decode bash scipt.";
         }
     } else if (fileExtension == "wav") {
         // Add logic for encoding text content into a WAV file
         //encodeMessageInWAV(targetFilePath, directoryPath, message, password);
-        return "Encoded text file into WAV: " + filePath;
+        return "Decoded bash script saved to: " + filePath;
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
