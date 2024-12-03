@@ -2,6 +2,8 @@
 
 **HideAway++** is a unique and smart C++ application designed to be a encrypting and decrypting steganography tool with integraded password cipher scrambles for encryption security. HideAway ++ takes advantage of powerful libraries like ImGui for the user interface, SndFile for Audio file encoding, and libpng for Image Encoding, giving users both a seamless and reliable application for hiding their data.
 
+![image](https://github.com/user-attachments/assets/ee055179-7852-4359-935b-7ae764aa6e72)
+
 ## Table of Contents
 
 - [Features](#features)
