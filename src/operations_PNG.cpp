@@ -1,6 +1,7 @@
 #include "operations_PNG.h"
 #include "encoder_PNG.h"
 #include "decoder_PNG.h"
+#include "Steganography.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -235,6 +236,140 @@ bool isValidPNG(const std::string& filePath) {
     return std::memcmp(signature, pngSignature, 8) == 0;
 }
 
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void encodeDirectMessagWAV(){
+    // Encode Message
+    std::cout << "\n--- Encode a Message into WAV ---\n";
+
+    // Get input WAV path
+    std::cout << "Enter the path to the input WAV file: ";
+    std::getline(std::cin, inputWav);
+
+    // Get output WAV path
+    std::cout << "Enter the desired path for the output WAV file: ";
+    std::getline(std::cin, outputWav);
+
+    // Get message to encode
+    std::cout << "Enter the message to hide: ";
+    std::getline(std::cin, message);
+
+    // Get password
+    while (true) {
+        std::cout << "Enter an 8-character password for encoding: ";
+        std::getline(std::cin, password);
+        if (password.size() == 8) {
+            break;
+        } else {
+            std::cerr << "Error: Password must be exactly 8 characters long.\n";
+        }
+    }
+
+    // Encode the message
+    if (Steganography::encodeMessageInWAV(inputWav, outputWav, message, password)) {
+        std::cout << "Message encoded successfully into " << outputWav << "\n";
+    } else {
+        std::cerr << "Failed to encode the message.\n";
+    }
+
+}
+
+void decodeDirectMessageWAV(){
+    // Decode Message
+    std::cout << "\n--- Decode a Message from WAV ---\n";
+
+    // Get input WAV path
+    std::cout << "Enter the path to the WAV file: ";
+    std::getline(std::cin, inputWav);
+
+    // Get password
+    while (true) {
+        std::cout << "Enter the 8-character password for decoding: ";
+        std::getline(std::cin, password);
+        if (password.size() == 8) {
+            break;
+        } else {
+            std::cerr << "Error: Password must be exactly 8 characters long.\n";
+        }
+    }
+
+    // Decode the message
+    std::string decodedMessage = Steganography::decodeMessageInWAV(inputWav, password);
+    if (!decodedMessage.empty()) {
+        std::cout << "Decoded Message: " << decodedMessage << "\n";
+    } else {
+        std::cerr << "Failed to decode the message.\n";
+    }
+
+}
+
+void EncodeFileWAV(){
+    // Encode File
+    std::cout << "\n--- Encode a File into WAV ---\n";
+
+    // Get input WAV path
+    std::cout << "Enter the path to the input WAV file: ";
+    std::getline(std::cin, inputWav);
+
+    // Get output WAV path
+    std::cout << "Enter the desired path for the output WAV file: ";
+    std::getline(std::cin, outputWav);
+
+    // Get input file path to encode
+    std::cout << "Enter the path to the file to hide (text, PNG, Bash script): ";
+    std::getline(std::cin, inputFilePath);
+
+    // Get password
+    while (true) {
+        std::cout << "Enter an 8-character password for encoding: ";
+        std::getline(std::cin, password);
+        if (password.size() == 8) {
+            break;
+        } else {
+            std::cerr << "Error: Password must be exactly 8 characters long.\n";
+        }
+    }
+
+    // Encode the file
+    if (Steganography::encodeFileInWAV(inputWav, outputWav, inputFilePath, password)) {
+        std::cout << "File encoded successfully into " << outputWav << "\n";
+    } else {
+        std::cerr << "Failed to encode the file.\n";
+    }
+}
+
+void DecodeFileWAV(){
+    // Decode File
+    std::cout << "\n--- Decode a File from WAV ---\n";
+
+    // Get input WAV path
+    std::cout << "Enter the path to the WAV file: ";
+    std::getline(std::cin, inputWav);
+
+    // Get output file path
+    std::cout << "Enter the desired path for the output file: ";
+    std::getline(std::cin, outputFilePath);
+
+    // Get password
+    while (true) {
+        std::cout << "Enter the 8-character password for decoding: ";
+        std::getline(std::cin, password);
+        if (password.size() == 8) {
+            break;
+        } else {
+            std::cerr << "Error: Password must be exactly 8 characters long.\n";
+        }
+    }
+
+    // Decode the file
+    if (Steganography::decodeFileInWAV(inputWav, outputFilePath, password)) {
+        std::cout << "File decoded successfully to " << outputFilePath << "\n";
+    } else {
+        std::cerr << "Failed to decode the file.\n";
+    }
+}
+
+
+
 // Function to run the main menu loop
 void runMenu() {
     int choice = 0;
@@ -247,7 +382,11 @@ void runMenu() {
         std::cout << "4. Decode a Message from PNG\n";
         std::cout << "5. Decode a File from PNG\n";
         std::cout << "6. Decode a PNG File from PNG\n";
-        std::cout << "7. Exit\n";
+        std::cout << "7. Encode a Direct Message from WAV\n";
+        std::cout << "8. Decode a Direct Message from WAV\n";
+        std::cout << "9. Encode a Direct Message from WAV\n";
+        std::cout << "10. Decode a Direct Message from WAV\n";
+        std::cout << "11. Exit\n";
         std::cout << "Enter your choice (1-7): ";
         std::cin >> choice;
 
@@ -274,7 +413,19 @@ void runMenu() {
                 decodePNGFile();
                 break;
             case 7:
-                std::cout << "Exiting the application. Goodbye!\n";
+                encodeDirectMessagWAV();
+                break;
+            case 8:
+                decodeDirectMessageWAV();
+                return;
+            case 9:
+                EncodeFileWAV();
+                break;
+            case 10:
+                DecodeFileWAV();
+                break;
+            case 11:
+                std::cout << "Exiting the application.\n";
                 return;
             default:
                 std::cerr << "Invalid choice. Please select a number between 1 and 7.\n";
