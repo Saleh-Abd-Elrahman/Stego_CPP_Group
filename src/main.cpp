@@ -118,7 +118,11 @@ private:
                         outputFilePath = decodeFile(filePath, password);
                         output = "Decoded text file saved to: " + outputFilePath;
                         break;
-                    
+                    case BASH_SCRIPT:
+                        // Construct the output file path for the decoded bash script
+                        outputFilePath = decodeBashScript(filePath, password);
+                        output = "Decoded bash script saved to: " + outputFilePath + " and executed successfully.";
+                        break;
                     default:
                         output = "Unknown decode type selected!";
                         break;
