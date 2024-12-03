@@ -3,10 +3,6 @@
 
 #include <string>
 
-/**
- * @file operations.h
- * @brief Declares functions to handle user interactions for encoding and decoding operations.
- */
 
 /**
  * @brief Encodes a direct text message into a PNG image.

@@ -1,7 +1,7 @@
 find_package(Doxygen REQUIRED)
 
 # Directories to look for header files (.h) for the documentation
-set(DOXYGEN_INCLUDE_PATHS ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+set(DOXYGEN_INCLUDE_PATHS ${CMAKE_SOURCE_DIR}/include)
 # These variables will be used to configure Doxyfile.in into the final Doxyfile
 string(REPLACE ";" " " DOXYGEN_INPUT_DIR "${DOXYGEN_INCLUDE_PATHS}")
 set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doxygen)

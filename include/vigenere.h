@@ -4,11 +4,6 @@
 #include <string>
 
 /**
- * @file vigenere.h
- * @brief Provides functions to encrypt and decrypt strings using the Vigenère Cipher.
- */
-
-/**
  * @brief Encrypts plaintext using the Vigenère Cipher with the provided key.
  *
  * This function encrypts the input plaintext by shifting each character based on the corresponding

@@ -31,5 +31,6 @@ find_package(imgui REQUIRED)
 
 # Add subdirectories for modular builds and testing
 add_subdirectory(src)
+add_subdirectory(docs)
 enable_testing()
 add_subdirectory(test)

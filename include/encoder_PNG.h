@@ -6,11 +6,6 @@
 #include <vector>
 
 /**
- * @file encoder.h
- * @brief Provides functions to encode messages and files into PNG images with password protection.
- */
-
-/**
  * @brief Encodes a text message into a PNG image using steganography.
  *
  * This function hides a given text message within the least significant bits of the blue channel

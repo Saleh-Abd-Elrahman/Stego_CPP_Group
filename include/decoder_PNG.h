@@ -5,10 +5,7 @@
 #include <vector>
 #include <png.h>
 
-/**
- * @file decoder.h
- * @brief Provides functions to decode hidden messages and files from PNG images with password verification.
- */
+
 
 /**
  * @brief Decodes a hidden text message from a PNG image after verifying the password.
