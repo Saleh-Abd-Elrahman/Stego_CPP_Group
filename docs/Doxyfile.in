@@ -1,0 +1,13 @@
+PROJECT_NAME           = "QRGuardPro"
+OUTPUT_DIRECTORY       = @CMAKE_BINARY_DIR@/docs
+INPUT                  = @CMAKE_SOURCE_DIR@
+FILE_PATTERNS          = *.cpp *.h
+RECURSIVE              = YES
+
+GENERATE_LATEX         = NO
+GENERATE_HTML          = YES
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+GENERATE_MAN           = NO
+
+EXCLUDE_PATTERNS       = */docs/* */build/*
