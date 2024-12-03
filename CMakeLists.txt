@@ -29,13 +29,6 @@ find_package(GLFW3 REQUIRED)
 # Find and include IMGUI
 find_package(imgui REQUIRED)
 
-# Specify source files
-set(SOURCES
-    src/main.cpp
-    src/encode.cpp
-    src/decode.cpp
-)
-
 # Add subdirectories for modular builds and testing
 add_subdirectory(src)
 enable_testing()
