@@ -18,9 +18,9 @@ class MainWindow {
 private:
     // State variables
     bool encode = true;               // Toggle between Encode/Decode
-    bool encodeTextFile = false;      // Toggle between encoding a message or a text file
-    enum DecodeType { MESSAGE, TEXT_FILE, BASH_SCRIPT };
-    DecodeType decodeType = MESSAGE;
+    enum Type { MESSAGE, TEXT_FILE, BASH_SCRIPT };
+    Type decodeType = MESSAGE;
+    Type encodeType = MESSAGE;
 
     
     // Use of C-style strings for input fields (ImGui doesn't support std::string)
@@ -33,13 +33,33 @@ private:
 
     // Render options for encoding
     void RenderEncodeOptions() {
-        ImGui::Checkbox("Encode Text File", &encodeTextFile);
-        if (encodeTextFile) {
-            ImGui::Text("Enter the path to the text file to encode into the target file.");
-            ImGui::InputText("Text File Path", textFilePath, sizeof(textFilePath));
-        } else {
-            ImGui::Text("Enter the message to encode into the target file.");
-            ImGui::InputText("Message", message, sizeof(message));
+        ImGui::Text("Select what you want to encode:");
+        if (ImGui::RadioButton("Message", encodeType == MESSAGE)) {
+            encodeType = MESSAGE;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Text File", encodeType == TEXT_FILE)) {
+            encodeType = TEXT_FILE;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Bash Script", encodeType == BASH_SCRIPT)) {
+            encodeType = BASH_SCRIPT;
+        }
+
+        // Render inputs based on selected encode type
+        switch (encodeType) {
+            case MESSAGE:
+                ImGui::Text("Enter the message to encode into the target file:");
+                ImGui::InputText("Message", message, sizeof(message));
+                break;
+            case TEXT_FILE:
+                ImGui::Text("Enter the path to the text file to encode into the target file:");
+                ImGui::InputText("Text File Path", textFilePath, sizeof(textFilePath));
+                break;
+            case BASH_SCRIPT:
+                ImGui::Text("Enter the path to the bash script to encode into the target file:");
+                ImGui::InputText("Bash Script Path", bashScriptPath, sizeof(bashScriptPath));
+                break;
         }
 
         // Password input
@@ -65,6 +85,7 @@ private:
             ImGui::Text("Enter the password used for encoding:");
             ImGui::InputText("Password", password, sizeof(password), ImGuiInputTextFlags_Password);
     }
+    
     // Handle form submission
     void HandleSubmit() {
         try {

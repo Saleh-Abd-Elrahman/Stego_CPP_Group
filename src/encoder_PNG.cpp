@@ -7,7 +7,7 @@
 #include <memory>
 #include <stdexcept>
 
-void encodeMessageInPNG(const std::string& inputImagePath, 
+std::string encodeMessageInPNG(const std::string& inputImagePath, 
                         const std::string& outputImagePath, 
                         const std::string& message, 
                         const std::string& password) {
@@ -129,27 +129,10 @@ void encodeMessageInPNG(const std::string& inputImagePath,
     } catch (const std::exception& e) {
         return "Exception: " + std::string(e.what());
     }
+    return outputImagePath;
 }
 
-bool encodeFileInPNG(const std::string& inputImagePath, 
-                     const std::string& outputImagePath, 
-                     const std::string& inputFilePath, 
-                     const std::string& password) {
-    // Read the content of the input file in binary mode
-    std::ifstream inFile(inputFilePath, std::ios::binary);
-    if (!inFile) {
-        return "Error: Unable to open file " + inputFilePath;
-    }
-    std::string fileContent((std::istreambuf_iterator<char>(inFile)),
-                             std::istreambuf_iterator<char>());
-    inFile.close();
-
-    // Proceed to encode the file content into the PNG
-    encodeMessageInPNG(inputImagePath, outputImagePath, fileContent, password);
-    return true;
-}
-
-void hideDataInImage(std::vector<png_bytep>& rows, int width, int height, 
+std::string hideDataInImage(std::vector<png_bytep>& rows, int width, int height, 
                     const std::string& data, bool hasAlpha) {
     size_t dataIdx = 0;
     bool dataComplete = false;
@@ -173,7 +156,7 @@ void hideDataInImage(std::vector<png_bytep>& rows, int width, int height,
     }
 }
 
-void savePNG(const char* outputPath, std::vector<png_bytep>& rows, 
+std::string savePNG(const char* outputPath, std::vector<png_bytep>& rows, 
             int width, int height, png_byte color_type) {
     // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
@@ -233,6 +216,6 @@ void savePNG(const char* outputPath, std::vector<png_bytep>& rows,
 
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;
-        return;
+        return "Error: " + std::string(e.what());
     }
 }

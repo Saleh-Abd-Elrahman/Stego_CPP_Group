@@ -48,7 +48,15 @@ std::string encodeText(const std::string& targetFilePath, const std::string& tex
     fs::path outputImagePath = inputPath.parent_path() / (inputPath.stem().string() + "_encoded" + inputPath.extension().string());
     
     if (fileExtension == "png") {
-        encodeFileInPNG(targetFilePath, outputImagePath, textFilePath, password);
+        // Read the content of the input file in binary mode
+        std::ifstream inFile(targetFilePath, std::ios::binary);
+        if (!inFile) {
+            return "Error: Unable to open file " + targetFilePath;
+        }
+        std::string fileContent((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
+        inFile.close();
+        encodeMessageInPNG(targetFilePath, outputImagePath, fileContent, password);
+
         return "Encoded text file into PNG: " + targetFilePath;
     } else if (fileExtension == "wav") {
         // Add logic for encoding text content into a WAV file
