@@ -7,7 +7,7 @@
 #include <memory>
 #include <stdexcept>
 
-std::string encodeMessageInPNG(const std::string& inputImagePath, 
+void encodeMessageInPNG(const std::string& inputImagePath, 
                         const std::string& outputImagePath, 
                         const std::string& message, 
                         const std::string& password) {
@@ -16,7 +16,8 @@ std::string encodeMessageInPNG(const std::string& inputImagePath,
 
     // Ensure password is exactly 8 characters
     if (password.size() != 8) {
-        return "Error: Password must be exactly 8 characters long.";
+        std::cerr << "Error: Password must be exactly 8 characters long." << std::endl;
+        return;
     }
 
     // Scramble the password using Vigenère Cipher
@@ -53,7 +54,8 @@ std::string encodeMessageInPNG(const std::string& inputImagePath,
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(inputImagePath.c_str(), "rb"), fileDeleter);
     if (!fp) {
-        return "Error: Unable to open input file " + inputImagePath;
+        std::cerr << "Error: Unable to open input file " << inputImagePath << std::endl;
+        return;
     }
 
     // RAII for png_struct and png_info
@@ -83,7 +85,8 @@ std::string encodeMessageInPNG(const std::string& inputImagePath,
         PngReader pngReader;
 
         if (setjmp(png_jmpbuf(pngReader.png_ptr))) {
-            return "Error during PNG read initialization";
+            std::cerr << "Error during PNG read initialization" << std::endl;
+            return;
         }
 
         png_init_io(pngReader.png_ptr, fp.get());
@@ -96,7 +99,8 @@ std::string encodeMessageInPNG(const std::string& inputImagePath,
 
         if (bit_depth != 8 || 
            (color_type != PNG_COLOR_TYPE_RGB && color_type != PNG_COLOR_TYPE_RGBA)) {
-            return "Unsupported PNG format. Only 8-bit RGB or RGBA is supported.";
+            std::cerr << "Unsupported PNG format. Only 8-bit RGB or RGBA is supported." << std::endl;
+            return;
         }
 
         png_read_update_info(pngReader.png_ptr, pngReader.info_ptr);
@@ -117,7 +121,8 @@ std::string encodeMessageInPNG(const std::string& inputImagePath,
         size_t totalDataBits = fullBinaryData.size(); // Already includes length and password
 
         if (totalDataBits > maxCapacity) {
-            return "Error: The image is too small to hold the entire data (length, password, message).";
+            std::cerr << "Error: The image is too small to hold the entire data (length, password, message)." << std::endl;
+            return;
         }
 
         // Hide the data in the image
@@ -127,12 +132,31 @@ std::string encodeMessageInPNG(const std::string& inputImagePath,
         savePNG(outputImagePath.c_str(), rowPointers, width, height, color_type);
 
     } catch (const std::exception& e) {
-        return "Exception: " + std::string(e.what());
+        std::cerr << "Exception: " << e.what() << std::endl;
+        return;
     }
-    return outputImagePath;
 }
 
-std::string hideDataInImage(std::vector<png_bytep>& rows, int width, int height, 
+bool encodeFileInPNG(const std::string& inputImagePath, 
+                     const std::string& outputImagePath, 
+                     const std::string& inputFilePath, 
+                     const std::string& password) {
+    // Read the content of the input file in binary mode
+    std::ifstream inFile(inputFilePath, std::ios::binary);
+    if (!inFile) {
+        std::cerr << "Error: Unable to open file " << inputFilePath << std::endl;
+        return false;
+    }
+    std::string fileContent((std::istreambuf_iterator<char>(inFile)),
+                             std::istreambuf_iterator<char>());
+    inFile.close();
+
+    // Proceed to encode the file content into the PNG
+    encodeMessageInPNG(inputImagePath, outputImagePath, fileContent, password);
+    return true;
+}
+
+void hideDataInImage(std::vector<png_bytep>& rows, int width, int height, 
                     const std::string& data, bool hasAlpha) {
     size_t dataIdx = 0;
     bool dataComplete = false;
@@ -152,17 +176,18 @@ std::string hideDataInImage(std::vector<png_bytep>& rows, int width, int height,
     }
 
     if (!dataComplete) {
-        return "Warning: The image is too small to hold the entire data.";
+        std::cerr << "Warning: The image is too small to hold the entire data." << std::endl;
     }
 }
 
-std::string savePNG(const char* outputPath, std::vector<png_bytep>& rows, 
+void savePNG(const char* outputPath, std::vector<png_bytep>& rows, 
             int width, int height, png_byte color_type) {
     // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(outputPath, "wb"), fileDeleter);
     if (!fp) {
-        return "Error: Unable to open output file " + std::string(outputPath);
+        std::cerr << "Error: Unable to open output file " << outputPath << std::endl;
+        return;
     }
 
     // RAII for png_struct and png_info
@@ -192,7 +217,8 @@ std::string savePNG(const char* outputPath, std::vector<png_bytep>& rows,
         PngWriter pngWriter;
 
         if (setjmp(png_jmpbuf(pngWriter.png_ptr))) {
-            return "Error during PNG write initialization";
+            std::cerr << "Error during PNG write initialization" << std::endl;
+            return;
         }
 
         png_init_io(pngWriter.png_ptr, fp.get());
@@ -216,6 +242,6 @@ std::string savePNG(const char* outputPath, std::vector<png_bytep>& rows,
 
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;
-        return "Error: " + std::string(e.what());
+        return;
     }
 }

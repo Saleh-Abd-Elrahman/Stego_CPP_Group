@@ -56,10 +56,6 @@ private:
                 ImGui::Text("Enter the path to the text file to encode into the target file:");
                 ImGui::InputText("Text File Path", textFilePath, sizeof(textFilePath));
                 break;
-            case BASH_SCRIPT:
-                ImGui::Text("Enter the path to the bash script to encode into the target file:");
-                ImGui::InputText("Bash Script Path", bashScriptPath, sizeof(bashScriptPath));
-                break;
         }
 
         // Password input
@@ -90,7 +86,7 @@ private:
     void HandleSubmit() {
         try {
             if (encode) {
-                if (encodeTextFile) {
+                if (encodeText) {
                     string result = encodeText(filePath, textFilePath, password);
                     output = "Text file encoded successfully: " + result;
                 } else {

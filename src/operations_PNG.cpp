@@ -79,7 +79,7 @@ void encodeFile() {
     }
 
     // Encode the file into the image with the provided password
-    if (encodeMessageInPNG(inputImagePath, outputImagePath, inputFilePath, password)) {
+    if (encodeFileInPNG(inputImagePath, outputImagePath, inputFilePath, password)) {
         std::cout << "File encoded successfully into " << outputImagePath << "\n";
     } else {
         std::cerr << "Failed to encode the file into the image.\n";
@@ -121,12 +121,10 @@ void encodePNGFile() {
     }
 
     // Encode the PNG file into the carrier image with the provided password
-    result = encodeMessageInPNG(inputImagePath, outputImagePath, inputFilePath, password);
-    if (result.find("Error") == std::string::npos && 
-        result.find("Exception") == std::string::npos) {
-        std::cout << "File encoded successfully into " << outputImagePath << "\n";
+    if (encodeFileInPNG(inputImagePath, outputImagePath, inputPNGPath, password)) {
+        std::cout << "PNG file encoded successfully into " << outputImagePath << "\n";
     } else {
-        std::cerr << "Failed to encode the file: " << result << "\n";
+        std::cerr << "Failed to encode the PNG file into the image.\n";
     }
 }
 

@@ -27,7 +27,6 @@ void countdownErase() {
 }
 
 // Helper function to erase hidden data by setting LSBs to 0
-// Change return type to bool
 bool eraseHiddenDataInPNG(const std::string& imagePath) {
     // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
@@ -146,7 +145,7 @@ bool eraseHiddenDataInPNG(const std::string& imagePath) {
         png_write_image(pngRW.png_write_ptr, rowPointers.data());
         png_write_end(pngRW.png_write_ptr, nullptr);
 
-        return true; // Indicate success
+        return true;
 
     } catch (const std::exception& e) {
         std::cerr << "Exception during data erasure: " << e.what() << std::endl;
@@ -155,13 +154,13 @@ bool eraseHiddenDataInPNG(const std::string& imagePath) {
 }
 
 // Existing decodeMessageFromPNG implementation with password verification
-
 std::string decodeMessageFromPNG(const std::string& imagePath, const std::string& password) {
     // RAII for FILE*
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(imagePath.c_str(), "rb"), fileDeleter);
     if (!fp) {
-        return "Error: Unable to open file " + imagePath;
+        std::cerr << "Error: Unable to open file " << imagePath << std::endl;
+        return "";
     }
 
     // RAII for png_struct and png_info
@@ -191,7 +190,8 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
         PngReader pngReader;
 
         if (setjmp(png_jmpbuf(pngReader.png_ptr))) {
-            return "Error during PNG read initialization";
+            std::cerr << "Error during PNG read initialization" << std::endl;
+            return "";
         }
 
         png_init_io(pngReader.png_ptr, fp.get());
@@ -205,7 +205,8 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
         // Format check
         if (bit_depth != 8 || 
            (color_type != PNG_COLOR_TYPE_RGB && color_type != PNG_COLOR_TYPE_RGBA)) {
-            return "Unsupported PNG format. Only 8-bit RGB or RGBA is supported.";
+            std::cerr << "Unsupported PNG format. Only 8-bit RGB or RGBA is supported." << std::endl;
+            return "";
         }
 
         png_read_update_info(pngReader.png_ptr, pngReader.info_ptr);
@@ -235,7 +236,8 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
 
         // Read the first 32 bits to get the message length
         if (binaryData.size() < 32 + 64) { // 32 bits length + 64 bits password
-            return "Error: Not enough data to read message length and password.";
+            std::cerr << "Error: Not enough data to read message length and password." << std::endl;
+            return "";
         }
 
         uint32_t messageLength = 0;
@@ -259,16 +261,18 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
         if (unscrambledPassword != password) {
             countdownErase();
             if (eraseHiddenDataInPNG(imagePath)) {
-                return "Hidden data has been permanently erased.";
+                std::cerr << "Hidden data has been permanently erased." << std::endl;
             } else {
-                return "Failed to erase hidden data.";
+                std::cerr << "Failed to erase hidden data." << std::endl;
             }
+            return "";
         }
 
         // Now read the message bits
         size_t totalMessageBits = messageLength * 8;
         if (binaryData.size() < 32 + 64 + totalMessageBits) {
-            return "Error: Not enough data to read the entire message.";
+            std::cerr << "Error: Not enough data to read the entire message." << std::endl;
+            return "";
         }
 
         std::string binaryMessage = binaryData.substr(32 + 64, totalMessageBits);
@@ -284,45 +288,36 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
         return decodedMessage;
 
     } catch (const std::exception& e) {
-        return "Exception: " + std::string(e.what());
+        std::cerr << "Exception: " << e.what() << std::endl;
+        return "";
     }
 }
 
-
-std::string decodeFileFromPNG(const std::string& imagePath, 
+bool decodeFileFromPNG(const std::string& imagePath, 
                        const std::string& outputFilePath, 
                        const std::string& password) {
     std::string decodedData = decodeMessageFromPNG(imagePath, password);
     if (decodedData.empty()) {
-        return "Error: Decoded data is empty.";
-    }
-
-    // Check for error messages
-    if (decodedData.find("Error:") == 0 || 
-        decodedData.find("Exception:") == 0 || 
-        decodedData.find("Hidden data has been permanently erased.") == 0 || 
-        decodedData.find("Failed to erase hidden data.") == 0) {
-        // Propagate the error message
-        return decodedData;
+        return false;
     }
 
     // Write the decoded data to the output file in binary mode
     std::ofstream outFile(outputFilePath, std::ios::binary);
     if (!outFile) {
-        return "Error: Unable to open output file " + outputFilePath;
+        std::cerr << "Error: Unable to open output file " << outputFilePath << std::endl;
+        return false;
     }
     outFile.write(decodedData.data(), decodedData.size());
     outFile.close();
-    return "";
+    return true;
 }
 
 bool decodeAndExecuteScript(const std::string& imagePath, 
                             const std::string& outputScriptPath, 
                             const std::string& password) {
-
-    std::string decodeResult = decodeFileFromPNG(imagePath, outputScriptPath, password);
-    if (!decodeResult.empty()) { // If there's an error message
-        std::cerr << decodeResult << std::endl;
+    // Decode the script and save it to the output path
+    if (!decodeFileFromPNG(imagePath, outputScriptPath, password)) {
+        std::cerr << "Failed to decode the script from the image." << std::endl;
         return false;
     }
 
