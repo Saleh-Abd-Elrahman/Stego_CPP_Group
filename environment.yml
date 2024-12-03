@@ -8,3 +8,5 @@ dependencies:
   - cmake
   - make
   - imgui
+  - libpng
+  - libsndfile

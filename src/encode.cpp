@@ -1,4 +1,6 @@
 #include "encode.h"
+#include "file_utils.h"
+#include "encoder_PNG.h"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -6,21 +8,49 @@
 // Encode a message
 std::string encodeMessage(const std::string& targetFilePath, const std::string& message, const std::string& password) {
 
-    // Implementation for encoding a message
-    return "Encoded message into: " + targetFilePath;
+    std::string fileExtension = getFileExtension(targetFilePath);
+    std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
+
+    std::string directoryPath = getDirectoryPath(filePath);
+    if (!directoryPath.empty()) {
+        std::cout << "Directory Path: " << directoryPath << std::endl;
+    } else {
+        std::cout << "No directory path found." << std::endl;
+    }
+    
+    if (fileExtension == "png") {
+        encodeMessageInPNG(targetFilePath, directoryPath, message, password);
+        return "Encoded text file into PNG: " + targetFilePath;
+    } else if (fileExtension == "wav") {
+        // Add logic for encoding text content into a WAV file
+        //encodeMessageInWAV(targetFilePath, directoryPath, message, password);
+        return "Encoded text file into WAV: " + targetFilePath;
+    } else {
+        throw std::runtime_error("Unsupported file format: " + fileExtension);
+    }
 }
 
 // Encode the content of a text file
 std::string encodeText(const std::string& targetFilePath, const std::string& textFilePath, const std::string& password) {
-    std::ifstream file(textFilePath);
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open the text file: " + textFilePath);
+    std::string fileExtension = getFileExtension(targetFilePath);
+    std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
+
+    std::string directoryPath = getDirectoryPath(filePath);
+    if (!directoryPath.empty()) {
+        std::cout << "Directory Path: " << directoryPath << std::endl;
+    } else {
+        std::cout << "No directory path found." << std::endl;
     }
-
-    std::ostringstream buffer;
-    buffer << file.rdbuf();
-    std::string fileContent = buffer.str();
-
-    // Implementation for encoding file content
-    return "Encoded text file into: " + targetFilePath;
+    
+    if (fileExtension == "png") {
+        encodeFileInPNG(targetFilePath, directoryPath, textFilePath, password);
+        return "Encoded text file into PNG: " + targetFilePath;
+    } else if (fileExtension == "wav") {
+        // Add logic for encoding text content into a WAV file
+        //encodeMessageInWAV(targetFilePath, directoryPath, message, password);
+        return "Encoded text file into WAV: " + targetFilePath;
+    } else {
+        throw std::runtime_error("Unsupported file format: " + fileExtension);
+    }
 }
+

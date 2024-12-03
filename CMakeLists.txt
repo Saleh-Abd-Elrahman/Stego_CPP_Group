@@ -6,6 +6,13 @@ project(CPPSTEGANOGRAPHY VERSION 1.0) # Project name and version
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+file(COPY ${CMAKE_SOURCE_DIR}/images DESTINATION ${CMAKE_BINARY_DIR})
+
+# We place the executables in the bin directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# We place the libraries in the lib directory
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
 # Enable Objective-C language for MacOS if needed
 if(APPLE)
     enable_language(OBJC)
