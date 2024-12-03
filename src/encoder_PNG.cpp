@@ -1,5 +1,5 @@
 #include "encoder_PNG.h"
-#include "vigenere_PNG.h"
+#include "vigenere.h"
 #include <png.h>
 #include <iostream>
 #include <fstream>

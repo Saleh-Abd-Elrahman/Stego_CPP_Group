@@ -1,4 +1,4 @@
-#include "vigenere_PNG.h"
+#include "vigenere.h"
 
 // Helper function to repeat the key to match the length of the text
 std::string repeatKey(const std::string& key, size_t length) {
