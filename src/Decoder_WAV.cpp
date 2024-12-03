@@ -9,7 +9,7 @@
 #include <chrono>
 #include <cstdlib> // For std::system
 
-std::string Steganography::decodeMessage(const std::string& inputWav, 
+std::string Steganography::decodeMessageInWAV(const std::string& inputWav, 
                                          const std::string& password) {
     // Fixed Vigenère key for password unscrambling
     const std::string vigenereKey = "VIGENEREK";
@@ -89,7 +89,7 @@ std::string Steganography::decodeMessage(const std::string& inputWav,
     return message;
 }
 
-bool Steganography::decodeFile(const std::string& inputWav, 
+bool Steganography::decodeFileInWAV(const std::string& inputWav, 
                                const std::string& outputFilePath, 
                                const std::string& password) {
     // Fixed Vigenère key for password unscrambling
@@ -211,7 +211,6 @@ std::string Steganography::binaryToMessage(const std::string& binaryData) {
     }
     return message;
 }
-
 
 bool Steganography::binaryToFile(const std::string& binaryData, const std::string& outputFilePath) {
     std::ofstream outputFile(outputFilePath, std::ios::binary);

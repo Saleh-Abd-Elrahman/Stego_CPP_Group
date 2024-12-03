@@ -14,15 +14,10 @@ std::string decodeMessage(const std::string& filePath, const std::string& passwo
         return "Error: Input file does not exist.";
     }
 
-    fs::path inputPath(filePath);
-    fs::path outputImagePath = inputPath.parent_path() / (inputPath.stem().string() + "_encoded" + inputPath.extension().string());
-
     if (fileExtension == "png") {
         return decodeMessageFromPNG(filePath, password);
     } else if (fileExtension == "wav") {
-        // Add logic for encoding text content into a WAV file
-        //encodeMessageInWAV(targetFilePath, directoryPath, message, password);
-        return "Encoded text file into WAV: " + filePath;
+        return decodeMessageInWAV(filePath, password);
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
@@ -49,9 +44,11 @@ std::string decodeFile(const std::string& filePath, const std::string& password)
             return "Failed to decode text file.";
         }
     } else if (fileExtension == "wav") {
-        // Add logic for encoding text content into a WAV file
-        //encodeMessageInWAV(targetFilePath, directoryPath, message, password);
-        return "Decoded text file saved to: " + filePath;
+        if (decodeFileInWAV(filePath, outputFilePath, password)) {
+            return "Decoded text file saved to: " + outputFilePath.string();
+        } else {
+            return "Failed to decode text file.";
+        }
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
@@ -80,11 +77,12 @@ std::string decodeBashScript(const std::string& filePath, const std::string& pas
             return "Failed to decode bash scipt.";
         }
     } else if (fileExtension == "wav") {
-        // Add logic for encoding text content into a WAV file
-        //encodeMessageInWAV(targetFilePath, directoryPath, message, password);
-        return "Decoded bash script saved to: " + filePath;
+        if (decodeFileInWAV(filePath, outputFilePath, password)) {
+            return "Decoded text file saved to: " + outputFilePath.string();
+        } else {
+            return "Failed to decode text file.";
+        };
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
-
 }
