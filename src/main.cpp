@@ -26,7 +26,7 @@ private:
     char textFilePath[512] = "";      // Text file path input (for encoding text files)
     char message[512] = "";           // Message input (for encoding messages)
     char password[512] = "";          // Password input (for encoding/decoding)
-    char outputFilePath[512] = "";    // Output file path for decoding text files
+    std::string outputFilePath = "";    // Output file path for decoding text files
     string output = "";               // Output message for decoding or success
 
     // Render options for encoding
@@ -62,7 +62,7 @@ private:
                         output = "Decoded message: " + decodeMessageFromPNG(filePath, password);
                         break;
                     case TEXT_FILE:
-                        outputFilePath =  getDirectoryPath(filePath);
+                        outputFilePath =  getDirectoryPath(filePath) + "/input.png";
                         output = "Decoded text file: " + decodeFileFromPNG(filePath, outputFilePath, password);
                         break;
                     default:
