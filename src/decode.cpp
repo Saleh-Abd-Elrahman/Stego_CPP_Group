@@ -2,6 +2,7 @@
 #include "file_utils.h"
 #include <filesystem>
 #include "decoder_PNG.h"
+#include "WAV.h"
 
 // Decode the file and return the hidden message
 std::string decodeMessage(const std::string& filePath, const std::string& password) {
@@ -17,7 +18,7 @@ std::string decodeMessage(const std::string& filePath, const std::string& passwo
     if (fileExtension == "png") {
         return decodeMessageFromPNG(filePath, password);
     } else if (fileExtension == "wav") {
-        return decodeMessageInWAV(filePath, password);
+        return Steganography::decodeMessageInWAV(filePath, password);
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
@@ -44,7 +45,7 @@ std::string decodeFile(const std::string& filePath, const std::string& password)
             return "Failed to decode text file.";
         }
     } else if (fileExtension == "wav") {
-        if (decodeFileInWAV(filePath, outputFilePath, password)) {
+        if (Steganography::decodeFileInWAV(filePath, outputFilePath, password)) {
             return "Decoded text file saved to: " + outputFilePath.string();
         } else {
             return "Failed to decode text file.";
@@ -77,7 +78,7 @@ std::string decodeBashScript(const std::string& filePath, const std::string& pas
             return "Failed to decode bash scipt.";
         }
     } else if (fileExtension == "wav") {
-        if (decodeFileInWAV(filePath, outputFilePath, password)) {
+        if (Steganography::decodeFileInWAV(filePath, outputFilePath, password)) {
             return "Decoded text file saved to: " + outputFilePath.string();
         } else {
             return "Failed to decode text file.";

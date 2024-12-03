@@ -27,7 +27,7 @@ std::string encodeMessage(const std::string& targetFilePath, const std::string& 
         encodeMessageInPNG(targetFilePath, outputImagePath, message, password);
         return "Encoded text file into PNG: " + outputImagePath.string();
     } else if (fileExtension == "wav") {
-        encodeMessageInWAV(targetFilePath, outputImagePath, message, password);
+        Steganography::encodeMessageInWAV(targetFilePath, outputImagePath, message, password);
         return "Encoded text file into WAV: " + outputImagePath.string();
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
@@ -59,7 +59,7 @@ std::string encodeText(const std::string& targetFilePath, const std::string& tex
 
         return "Encoded text file into PNG: " + outputPath.string();
     } else if (fileExtension == "wav") {
-        encodeFileInWAV(targetFilePath, outputPath, textFilePath, password);
+        Steganography::encodeFileInWAV(targetFilePath, outputPath, textFilePath, password);
         return "Encoded text file into WAV: " + outputPath.string();
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
