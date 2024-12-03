@@ -3,10 +3,20 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - ninja
+  - make
+  - cmake
+  - clang
+  - doxygen
+  - numpy
+  - scipy
+  - matplotlib       
+  - boost=1.80.0    
+  - pip:
+    - breathe
+    - sphinx
   - sdl2
   - glfw
-  - cmake
-  - make
   - imgui
   - libpng
   - libsndfile
