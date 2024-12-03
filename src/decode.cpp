@@ -57,6 +57,7 @@ std::string decodeFile(const std::string& filePath, const std::string& password)
     }
 
 }
+}
 
 
 // Decode the file and return the hidden file
@@ -89,4 +90,5 @@ std::string decodeBashScript(const std::string& filePath, const std::string& pas
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
+}
 }
