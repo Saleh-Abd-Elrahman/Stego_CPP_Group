@@ -1,41 +1,20 @@
-# Specify the minimum CMake version and project metadata
-cmake_minimum_required(VERSION 3.20) # Minimum version of CMake required
-project(CPPSTEGANOGRAPHY VERSION 1.0) # Project name and version
+# Every CMake project needs to start with these two lines
+cmake_minimum_required(VERSION 3.20) # This is the minimum version of CMake required
+project(cppsteganography VERSION 1.0) # This is the name of the project and its versino
 
-# Set the C++ standard
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Enable Objective-C language for MacOS if needed
-if(APPLE)
-    enable_language(OBJC)
-    set(CMAKE_OBJC_FLAGS "${CMAKE_C_FLAGS}")
-endif()
+set(CMAKE_CXX_STANDARD 17) # This sets the C++ standard to C++17
+set(CMAKE_CXX_STANDARD_REQUIRED True) # This tells CMake that the stdandard must be available
 
-# Include project directories 
-include_directories(include)
-include_directories(src)
+file(COPY ${CMAKE_SOURCE_DIR}/images DESTINATION ${CMAKE_BINARY_DIR})
 
-# Find and include GLFW
-find_package(GLFW3 REQUIRED)
+# We place the executables in the bin directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# We place the libraries in the lib directory
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# Find and include IMGUI
-find_package(imgui REQUIRED)
-
-# Specify source files
-set(SOURCES
-    src/main.cpp
-    src/encode.cpp
-    src/decode.cpp
-)
-
-# Add subdirectories for modular builds and testing
+# We normally have a CMakeLists.txt file in each directory that has something that needs to be built
 add_subdirectory(src)
-enable_testing()
+#add_subdirectory(docs)
+enable_testing() # This line allows to call ctest after compilation
 add_subdirectory(test)
-
-# Create the executable
-add_executable(${PROJECT_NAME} ${SOURCES})
-
-# Link libraries
-target_link_libraries(${PROJECT_NAME} imgui::imgui SDL2 glfw)
