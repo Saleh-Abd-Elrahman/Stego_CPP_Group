@@ -1,7 +1,7 @@
 #include "encode.h"
 #include "file_utils.h"
 #include "encoder_PNG.h"
-#include "wav.h"
+#include "WAV.h"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -25,10 +25,10 @@ std::string encodeMessage(const std::string& targetFilePath, const std::string& 
 
     if (fileExtension == "png") {
         encodeMessageInPNG(targetFilePath, outputImagePath, message, password);
-        return "Encoded text file into PNG: " + outputImagePath;
+        return "Encoded text file into PNG: " + outputImagePath.string();
     } else if (fileExtension == "wav") {
         encodeMessageInWAV(targetFilePath, outputImagePath, message, password);
-        return "Encoded text file into WAV: " + outputImagePath;
+        return "Encoded text file into WAV: " + outputImagePath.string();
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
@@ -57,10 +57,10 @@ std::string encodeText(const std::string& targetFilePath, const std::string& tex
         inFile.close();
         encodeMessageInPNG(targetFilePath, outputPath, fileContent, password);
 
-        return "Encoded text file into PNG: " + targetFilePath;
+        return "Encoded text file into PNG: " + outputPath.string();
     } else if (fileExtension == "wav") {
         encodeFileInWAV(targetFilePath, outputPath, textFilePath, password);
-        return "Encoded text file into WAV: " + targetFilePath;
+        return "Encoded text file into WAV: " + outputPath.string();
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
