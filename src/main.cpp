@@ -1,157 +1,287 @@
-#include "Steganography.h"
+// main.cpp:
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include <GLFW/glfw3.h>
 #include <iostream>
 #include <string>
+#include "encode.h"
+#include "decode.h"
+#include "file_utils.h"
 
-int main() {
-    int choice = 0;
-    std::string inputWav, outputWav, message, password, inputFilePath, outputFilePath;
+using namespace std;
 
-    while (true) {
-        std::cout << "\n=== Steganography Application ===\n";
-        std::cout << "1. Encode a Message into WAV\n";
-        std::cout << "2. Decode a Message from WAV\n";
-        std::cout << "3. Encode a File into WAV\n";
-        std::cout << "4. Decode a File from WAV\n";
-        std::cout << "5. Exit\n";
-        std::cout << "Enter your choice (1-5): ";
-        std::cin >> choice;
+// Class to encapsulate main window logic
+class MainWindow {
+private:
+    // State variables
+    bool encode = true;               // Toggle between Encode/Decode
+    enum Type { MESSAGE, TEXT_FILE, BASH_SCRIPT };
+    Type decodeType = MESSAGE;
+    Type encodeType = MESSAGE;
 
-        // Clear input buffer to handle any leftover input
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    
+    // Use of C-style strings for input fields (ImGui doesn't support std::string)
+    char filePath[512] = "";          // File path input (target file for encoding/decoding)
+    char textFilePath[512] = "";      // Text file path input (for encoding text files)
+    char message[512] = "";           // Message input (for encoding messages)
+    char password[512] = "";          // Password input (for encoding/decoding)
+    string outputFilePath = "";  // Output file path for decoding text files or scripts
+    string output = "";               // Output message for decoding or success
 
-        if (choice == 1) {
-            // Encode Message
-            std::cout << "\n--- Encode a Message into WAV ---\n";
+    // Render options for encoding
+    void RenderEncodeOptions() {
+        ImGui::Text("Select what you want to encode:");
+        if (ImGui::RadioButton("Message", encodeType == MESSAGE)) {
+            encodeType = MESSAGE;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Text File", encodeType == TEXT_FILE)) {
+            encodeType = TEXT_FILE;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Bash Script", encodeType == BASH_SCRIPT)) {
+            encodeType = BASH_SCRIPT;
+        }
 
-            // Get input WAV path
-            std::cout << "Enter the path to the input WAV file: ";
-            std::getline(std::cin, inputWav);
+        // Render inputs based on selected encode type
+        switch (encodeType) {
+            case MESSAGE:
+                ImGui::Text("Enter the message to encode into the target file:");
+                ImGui::InputText("Input", message, sizeof(message));
+                break;
+            case TEXT_FILE:
+                ImGui::Text("Enter the path to the text file to encode into the target file:");
+                ImGui::InputText("Text File Path", textFilePath, sizeof(textFilePath));
+                break;
+            case BASH_SCRIPT:
+                ImGui::Text("Enter the path to the bash script to encode into the target file:");
+                ImGui::InputText("Bash Script Path", textFilePath, sizeof(textFilePath));
+                break;
+        }
 
-            // Get output WAV path
-            std::cout << "Enter the desired path for the output WAV file: ";
-            std::getline(std::cin, outputWav);
+        // Password input
+        ImGui::Text("Enter a password:");
+        ImGui::InputText("Password", password, sizeof(password), ImGuiInputTextFlags_Password);
+    }
 
-            // Get message to encode
-            std::cout << "Enter the message to hide: ";
-            std::getline(std::cin, message);
-
-            // Get password
-            while (true) {
-                std::cout << "Enter an 8-character password for encoding: ";
-                std::getline(std::cin, password);
-                if (password.size() == 8) {
-                    break;
-                } else {
-                    std::cerr << "Error: Password must be exactly 8 characters long.\n";
+    // Render options for decoding
+    void RenderDecodeOptions() {
+        ImGui::Text("Select what you want to decode:");
+            if (ImGui::RadioButton("Message", decodeType == MESSAGE)) {
+                decodeType = MESSAGE;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Text File", decodeType == TEXT_FILE)) {
+                decodeType = TEXT_FILE;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Bash Script", decodeType == BASH_SCRIPT)) {
+                decodeType = BASH_SCRIPT;
+            }
+            // Password input
+            ImGui::Text("Enter the password used for encoding:");
+            ImGui::InputText("Password", password, sizeof(password), ImGuiInputTextFlags_Password);
+    }
+    
+    // Handle form submission
+    void HandleSubmit() {
+        try {
+            if (encode) {
+                string result;
+                switch(encodeType) {
+                    case MESSAGE:
+                        output = encodeMessage(filePath, message, password);
+                        break;
+                    case TEXT_FILE:
+                        output = encodeText(filePath, textFilePath, password);
+                        break;
+                    case BASH_SCRIPT:
+                        output = encodeText(filePath, textFilePath, password);
+                        break;
+                    default:
+                        output = "Unknown encode type selected!";
+                        break;
+                }
+               
+            } else {
+                switch (decodeType) {
+                    case MESSAGE:
+                        output = "Decoded message: " + decodeMessage(filePath, password);
+                        break;
+                    case TEXT_FILE:
+                        // Construct the output file path for the decoded text file
+                        output = decodeFile(filePath, password);
+                        break;
+                    case BASH_SCRIPT:
+                        // Construct the output file path for the decoded bash script
+                        output = decodeBashScript(filePath, password);
+                        break;
+                    default:
+                        output = "Unknown decode type selected!";
+                        break;
                 }
             }
-
-            // Encode the message
-            if (Steganography::encodeMessage(inputWav, outputWav, message, password)) {
-                std::cout << "Message encoded successfully into " << outputWav << "\n";
-            } else {
-                std::cerr << "Failed to encode the message.\n";
-            }
-
-        } else if (choice == 2) {
-            // Decode Message
-            std::cout << "\n--- Decode a Message from WAV ---\n";
-
-            // Get input WAV path
-            std::cout << "Enter the path to the WAV file: ";
-            std::getline(std::cin, inputWav);
-
-            // Get password
-            while (true) {
-                std::cout << "Enter the 8-character password for decoding: ";
-                std::getline(std::cin, password);
-                if (password.size() == 8) {
-                    break;
-                } else {
-                    std::cerr << "Error: Password must be exactly 8 characters long.\n";
-                }
-            }
-
-            // Decode the message
-            std::string decodedMessage = Steganography::decodeMessage(inputWav, password);
-            if (!decodedMessage.empty()) {
-                std::cout << "Decoded Message: " << decodedMessage << "\n";
-            } else {
-                std::cerr << "Failed to decode the message.\n";
-            }
-
-        } else if (choice == 3) {
-            // Encode File
-            std::cout << "\n--- Encode a File into WAV ---\n";
-
-            // Get input WAV path
-            std::cout << "Enter the path to the input WAV file: ";
-            std::getline(std::cin, inputWav);
-
-            // Get output WAV path
-            std::cout << "Enter the desired path for the output WAV file: ";
-            std::getline(std::cin, outputWav);
-
-            // Get input file path to encode
-            std::cout << "Enter the path to the file to hide (text, PNG, Bash script): ";
-            std::getline(std::cin, inputFilePath);
-
-            // Get password
-            while (true) {
-                std::cout << "Enter an 8-character password for encoding: ";
-                std::getline(std::cin, password);
-                if (password.size() == 8) {
-                    break;
-                } else {
-                    std::cerr << "Error: Password must be exactly 8 characters long.\n";
-                }
-            }
-
-            // Encode the file
-            if (Steganography::encodeFile(inputWav, outputWav, inputFilePath, password)) {
-                std::cout << "File encoded successfully into " << outputWav << "\n";
-            } else {
-                std::cerr << "Failed to encode the file.\n";
-            }
-
-        } else if (choice == 4) {
-            // Decode File
-            std::cout << "\n--- Decode a File from WAV ---\n";
-
-            // Get input WAV path
-            std::cout << "Enter the path to the WAV file: ";
-            std::getline(std::cin, inputWav);
-
-            // Get output file path
-            std::cout << "Enter the desired path for the output file: ";
-            std::getline(std::cin, outputFilePath);
-
-            // Get password
-            while (true) {
-                std::cout << "Enter the 8-character password for decoding: ";
-                std::getline(std::cin, password);
-                if (password.size() == 8) {
-                    break;
-                } else {
-                    std::cerr << "Error: Password must be exactly 8 characters long.\n";
-                }
-            }
-
-            // Decode the file
-            if (Steganography::decodeFile(inputWav, outputFilePath, password)) {
-                std::cout << "File decoded successfully to " << outputFilePath << "\n";
-            } else {
-                std::cerr << "Failed to decode the file.\n";
-            }
-
-        } else if (choice == 5) {
-            // Exit
-            std::cout << "Exiting the application. Goodbye!\n";
-            break;
-        } else {
-            std::cerr << "Invalid choice. Please select a number between 1 and 5.\n";
+        } catch (const exception& e) {
+            output = "Error: " + string(e.what());
         }
     }
 
+
+    // Render the output message
+    void RenderOutput() {
+        if (!output.empty()) {
+            ImGui::Text("Output:");
+            ImGui::Separator();
+            ImGui::TextWrapped("%s", output.c_str());
+        }
+    }
+
+    // Apply custom styling for the UI
+    void ApplyStyling() {
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.WindowRounding = 5.0f;
+        style.FrameRounding = 5.0f;
+        style.FramePadding = ImVec2(10, 8);
+        style.ItemSpacing = ImVec2(10, 10);
+
+        // Custom colors
+        ImVec4* colors = style.Colors;
+        colors[ImGuiCol_WindowBg] = ImVec4(0.15f, 0.15f, 0.2f, 1.0f);
+        colors[ImGuiCol_Button] = ImVec4(0.2f, 0.5f, 0.8f, 1.0f);
+        colors[ImGuiCol_ButtonHovered] = ImVec4(0.3f, 0.6f, 0.9f, 1.0f);
+        colors[ImGuiCol_ButtonActive] = ImVec4(0.1f, 0.4f, 0.7f, 1.0f);
+        colors[ImGuiCol_Header] = ImVec4(0.2f, 0.5f, 0.8f, 1.0f);
+        colors[ImGuiCol_HeaderHovered] = ImVec4(0.3f, 0.6f, 0.9f, 1.0f);
+        colors[ImGuiCol_HeaderActive] = ImVec4(0.1f, 0.4f, 0.7f, 1.0f);
+    }
+
+public:
+    // Render the main window
+    void Render() {
+        ApplyStyling();
+
+        // Match GLFW window size and position
+        int display_w, display_h;
+        glfwGetFramebufferSize(glfwGetCurrentContext(), &display_w, &display_h);
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImVec2((float)display_w, (float)display_h));
+
+        // Start ImGui window
+        ImGui::Begin("Steganography", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+        // Encode or Decode toggle
+        ImGui::Text("Mode:");
+        if (ImGui::RadioButton("Encode", encode)) {
+            encode = true;
+            output = "";
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Decode", !encode)) {
+            encode = false;
+            output = "";
+        }
+
+        // File path for the target file (image/audio)
+        ImGui::Text("Enter the path to the target file (.png or .wav).");
+        ImGui::InputText("Target File Path", filePath, sizeof(filePath));
+
+        if (encode) {
+            RenderEncodeOptions();
+        }
+        else {
+            RenderDecodeOptions();
+        }
+        
+
+        // Submit button
+        if (ImGui::Button("Submit")) {
+            HandleSubmit();
+        }
+
+        // Render output
+        RenderOutput();
+
+        ImGui::End();
+    }
+};
+
+// Main application window class
+class AppWindow {
+private:
+    GLFWwindow* window;     // GLFW window instance
+    MainWindow mainWindow;  // Main window instance
+
+public:
+    AppWindow(const char* title, int width, int height) {
+        if (!glfwInit()) {
+            throw runtime_error("Failed to initialize GLFW!");
+        }
+
+        // Setup OpenGL version
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+        // Create GLFW window
+        window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+        if (!window) {
+            glfwTerminate();
+            throw runtime_error("Failed to create GLFW window!");
+        }
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
+
+        // Initialize ImGui
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGui::StyleColorsDark();
+
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplOpenGL3_Init("#version 330");
+    }
+
+    ~AppWindow() {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+        glfwDestroyWindow(window);
+        glfwTerminate();
+    }
+
+    void Run() {
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            // Render the main window
+            mainWindow.Render();
+
+            // Rendering
+            ImGui::Render();
+            int display_w, display_h;
+            glfwGetFramebufferSize(window, &display_w, &display_h);
+            glViewport(0, 0, display_w, display_h);
+            glClearColor(0.15f, 0.15f, 0.2f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            glfwSwapBuffers(window);
+        }
+    }
+};
+
+int main() {
+    try {
+        AppWindow appWindow("Steganography Frontend", 800, 600);
+        appWindow.Run();
+    } catch (const exception& e) {
+        cerr << e.what() << endl;
+        return -1;
+    }
     return 0;
 }

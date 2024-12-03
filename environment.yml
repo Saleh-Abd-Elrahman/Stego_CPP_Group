@@ -1,19 +1,22 @@
-name: cppgroup
+name: steganography_env
 channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.11
-  - cmake
   - ninja
   - make
+  - cmake
   - clang
   - doxygen
-  - pip 
   - numpy
   - scipy
-  - matplotlib        # G++ compiler (for Linux)        # Clang++ compiler (for macOS)# Optional: If you plan to use libmpg123
-  - boost=1.80.0           # Optional: For additional C++ utilities
+  - matplotlib       
+  - boost=1.80.0    
   - pip:
     - breathe
     - sphinx
+  - sdl2
+  - glfw
+  - imgui
+  - libpng
+  - libsndfile
