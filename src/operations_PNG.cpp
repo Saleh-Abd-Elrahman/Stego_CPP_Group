@@ -1,6 +1,7 @@
 #include "operations_PNG.h"
 #include "encoder_PNG.h"
 #include "decoder_PNG.h"
+#include "vigenere.h"
 #include "WAV.h"
 #include <iostream>
 #include <fstream>
@@ -238,6 +239,8 @@ bool isValidPNG(const std::string& filePath) {
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 void encodeDirectMessagWAV(){
+
+    std::string inputWav, message, outputWav, password;
     // Encode Message
     std::cout << "\n--- Encode a Message into WAV ---\n";
 
@@ -274,6 +277,8 @@ void encodeDirectMessagWAV(){
 }
 
 void decodeDirectMessageWAV(){
+
+    std::string inputWav, message, outputWav, password;
     // Decode Message
     std::cout << "\n--- Decode a Message from WAV ---\n";
 
@@ -303,6 +308,8 @@ void decodeDirectMessageWAV(){
 }
 
 void EncodeFileWAV(){
+
+    std::string inputWav, inputFilePath, outputWav, password;
     // Encode File
     std::cout << "\n--- Encode a File into WAV ---\n";
 
@@ -338,6 +345,7 @@ void EncodeFileWAV(){
 }
 
 void DecodeFileWAV(){
+    std::string inputWav, outputFilePath, outputWav, password;
     // Decode File
     std::cout << "\n--- Decode a File from WAV ---\n";
 
