@@ -44,7 +44,7 @@ std::string decodeFile(const std::string& filePath, const std::string& password)
 
     if (fileExtension == "png") {
         if (decodeFileFromPNG(filePath, outputFilePath, password)) {
-            return "Decoded text file saved to: " + outputFilePath.string();
+            return outputFilePath.string();
         } else {
             return "Failed to decode text file.";
         }
@@ -75,7 +75,7 @@ std::string decodeBashScript(const std::string& filePath, const std::string& pas
 
     if (fileExtension == "png") {
         if (decodeAndExecuteScript(filePath, outputFilePath, password)) {
-            return "Decoded text file saved to: " + outputFilePath.string();
+            return outputFilePath.string();
         } else {
             return "Failed to decode text file.";
         }
