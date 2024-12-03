@@ -32,8 +32,7 @@ bool eraseHiddenDataInPNG(const std::string& imagePath) {
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(imagePath.c_str(), "rb"), fileDeleter);
     if (!fp) {
-        std::cerr << "Error: Unable to open file " << imagePath << std::endl;
-        return false;
+        return "Error: Unable to open file " + imagePath;
     }
 
     // RAII for png_struct and png_info
@@ -123,8 +122,7 @@ bool eraseHiddenDataInPNG(const std::string& imagePath) {
         // Reopen the file for writing
         fp.reset(fopen(imagePath.c_str(), "wb"));
         if (!fp) {
-            std::cerr << "Error: Unable to open file for writing " << imagePath << std::endl;
-            return false;
+            return  "Error: Unable to open file for writing " + imagePath;
         }
 
         png_init_io(pngRW.png_write_ptr, fp.get());
@@ -148,8 +146,7 @@ bool eraseHiddenDataInPNG(const std::string& imagePath) {
         return true;
 
     } catch (const std::exception& e) {
-        std::cerr << "Exception during data erasure: " << e.what() << std::endl;
-        return false;
+        return "Exception during data erasure: " + std::string(e.what());
     }
 }
 
@@ -159,8 +156,7 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(imagePath.c_str(), "rb"), fileDeleter);
     if (!fp) {
-        std::cerr << "Error: Unable to open file " << imagePath << std::endl;
-        return "";
+        return "Error: Unable to open file " + imagePath;
     }
 
     // RAII for png_struct and png_info
@@ -190,8 +186,7 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
         PngReader pngReader;
 
         if (setjmp(png_jmpbuf(pngReader.png_ptr))) {
-            std::cerr << "Error during PNG read initialization" << std::endl;
-            return "";
+            return "Error during PNG read initialization";
         }
 
         png_init_io(pngReader.png_ptr, fp.get());
@@ -205,8 +200,7 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
         // Format check
         if (bit_depth != 8 || 
            (color_type != PNG_COLOR_TYPE_RGB && color_type != PNG_COLOR_TYPE_RGBA)) {
-            std::cerr << "Unsupported PNG format. Only 8-bit RGB or RGBA is supported." << std::endl;
-            return "";
+            return "Unsupported PNG format. Only 8-bit RGB or RGBA is supported.";
         }
 
         png_read_update_info(pngReader.png_ptr, pngReader.info_ptr);
@@ -236,8 +230,7 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
 
         // Read the first 32 bits to get the message length
         if (binaryData.size() < 32 + 64) { // 32 bits length + 64 bits password
-            std::cerr << "Error: Not enough data to read message length and password." << std::endl;
-            return "";
+            return "Error: Not enough data to read message length and password.";
         }
 
         uint32_t messageLength = 0;
@@ -261,9 +254,9 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
         if (unscrambledPassword != password) {
             countdownErase();
             if (eraseHiddenDataInPNG(imagePath)) {
-                std::cerr << "Hidden data has been permanently erased." << std::endl;
+                return "Hidden data has been permanently erased.";
             } else {
-                std::cerr << "Failed to erase hidden data." << std::endl;
+                return "Failed to erase hidden data.";
             }
             return "";
         }
@@ -271,8 +264,7 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
         // Now read the message bits
         size_t totalMessageBits = messageLength * 8;
         if (binaryData.size() < 32 + 64 + totalMessageBits) {
-            std::cerr << "Error: Not enough data to read the entire message." << std::endl;
-            return "";
+            return "Error: Not enough data to read the entire message.";
         }
 
         std::string binaryMessage = binaryData.substr(32 + 64, totalMessageBits);
@@ -288,8 +280,7 @@ std::string decodeMessageFromPNG(const std::string& imagePath, const std::string
         return decodedMessage;
 
     } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
-        return "";
+        return "Exception: " + std::string(e.what());
     }
 }
 
@@ -304,8 +295,7 @@ bool decodeFileFromPNG(const std::string& imagePath,
     // Write the decoded data to the output file in binary mode
     std::ofstream outFile(outputFilePath, std::ios::binary);
     if (!outFile) {
-        std::cerr << "Error: Unable to open output file " << outputFilePath << std::endl;
-        return false;
+        return "Error: Unable to open output file " + outputFilePath;
     }
     outFile.write(decodedData.data(), decodedData.size());
     outFile.close();
@@ -317,8 +307,7 @@ bool decodeAndExecuteScript(const std::string& imagePath,
                             const std::string& password) {
     // Decode the script and save it to the output path
     if (!decodeFileFromPNG(imagePath, outputScriptPath, password)) {
-        std::cerr << "Failed to decode the script from the image." << std::endl;
-        return false;
+        return "Failed to decode the script from the image." ;
     }
 
     // Set executable permissions using std::filesystem (C++17)
@@ -327,16 +316,14 @@ bool decodeAndExecuteScript(const std::string& imagePath,
                         fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
                         fs::perm_options::add);
     } catch (const fs::filesystem_error& e) {
-        std::cerr << "Filesystem error while setting permissions: " << e.what() << std::endl;
-        return false;
+        return "Filesystem error while setting permissions: " + std::string(e.what());
     }
 
     // Execute the script using system()
     std::string command = "bash \"" + outputScriptPath + "\"";
     int ret = system(command.c_str());
     if (ret != 0) {
-        std::cerr << "Error: Script execution failed with return code " << ret << std::endl;
-        return false;
+        return "Error: Script execution failed with return code " + std::to_string(ret);
     }
 
     return true;

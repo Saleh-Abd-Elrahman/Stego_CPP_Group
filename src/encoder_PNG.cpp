@@ -16,8 +16,7 @@ void encodeMessageInPNG(const std::string& inputImagePath,
 
     // Ensure password is exactly 8 characters
     if (password.size() != 8) {
-        std::cerr << "Error: Password must be exactly 8 characters long." << std::endl;
-        return;
+        return "Error: Password must be exactly 8 characters long.";
     }
 
     // Scramble the password using Vigenère Cipher
@@ -54,8 +53,7 @@ void encodeMessageInPNG(const std::string& inputImagePath,
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(inputImagePath.c_str(), "rb"), fileDeleter);
     if (!fp) {
-        std::cerr << "Error: Unable to open input file " << inputImagePath << std::endl;
-        return;
+        return "Error: Unable to open input file " + inputImagePath;
     }
 
     // RAII for png_struct and png_info
@@ -85,8 +83,7 @@ void encodeMessageInPNG(const std::string& inputImagePath,
         PngReader pngReader;
 
         if (setjmp(png_jmpbuf(pngReader.png_ptr))) {
-            std::cerr << "Error during PNG read initialization" << std::endl;
-            return;
+            return "Error during PNG read initialization";
         }
 
         png_init_io(pngReader.png_ptr, fp.get());
@@ -99,8 +96,7 @@ void encodeMessageInPNG(const std::string& inputImagePath,
 
         if (bit_depth != 8 || 
            (color_type != PNG_COLOR_TYPE_RGB && color_type != PNG_COLOR_TYPE_RGBA)) {
-            std::cerr << "Unsupported PNG format. Only 8-bit RGB or RGBA is supported." << std::endl;
-            return;
+            return "Unsupported PNG format. Only 8-bit RGB or RGBA is supported.";
         }
 
         png_read_update_info(pngReader.png_ptr, pngReader.info_ptr);
@@ -121,8 +117,7 @@ void encodeMessageInPNG(const std::string& inputImagePath,
         size_t totalDataBits = fullBinaryData.size(); // Already includes length and password
 
         if (totalDataBits > maxCapacity) {
-            std::cerr << "Error: The image is too small to hold the entire data (length, password, message)." << std::endl;
-            return;
+            return "Error: The image is too small to hold the entire data (length, password, message).";
         }
 
         // Hide the data in the image
@@ -132,8 +127,7 @@ void encodeMessageInPNG(const std::string& inputImagePath,
         savePNG(outputImagePath.c_str(), rowPointers, width, height, color_type);
 
     } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
-        return;
+        return "Exception: " + std::string(e.what());
     }
 }
 
@@ -144,8 +138,7 @@ bool encodeFileInPNG(const std::string& inputImagePath,
     // Read the content of the input file in binary mode
     std::ifstream inFile(inputFilePath, std::ios::binary);
     if (!inFile) {
-        std::cerr << "Error: Unable to open file " << inputFilePath << std::endl;
-        return false;
+        return "Error: Unable to open file " + inputFilePath;
     }
     std::string fileContent((std::istreambuf_iterator<char>(inFile)),
                              std::istreambuf_iterator<char>());
@@ -176,7 +169,7 @@ void hideDataInImage(std::vector<png_bytep>& rows, int width, int height,
     }
 
     if (!dataComplete) {
-        std::cerr << "Warning: The image is too small to hold the entire data." << std::endl;
+        return "Warning: The image is too small to hold the entire data.";
     }
 }
 
@@ -186,8 +179,7 @@ void savePNG(const char* outputPath, std::vector<png_bytep>& rows,
     auto fileDeleter = [](FILE* fp) { if (fp) fclose(fp); };
     std::unique_ptr<FILE, decltype(fileDeleter)> fp(fopen(outputPath, "wb"), fileDeleter);
     if (!fp) {
-        std::cerr << "Error: Unable to open output file " << outputPath << std::endl;
-        return;
+        return "Error: Unable to open output file " + std::string(outputPath);
     }
 
     // RAII for png_struct and png_info
@@ -217,8 +209,7 @@ void savePNG(const char* outputPath, std::vector<png_bytep>& rows,
         PngWriter pngWriter;
 
         if (setjmp(png_jmpbuf(pngWriter.png_ptr))) {
-            std::cerr << "Error during PNG write initialization" << std::endl;
-            return;
+            return "Error during PNG write initialization";
         }
 
         png_init_io(pngWriter.png_ptr, fp.get());

@@ -1,3 +1,5 @@
+// main.cpp:
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -26,7 +28,7 @@ private:
     char textFilePath[512] = "";      // Text file path input (for encoding text files)
     char message[512] = "";           // Message input (for encoding messages)
     char password[512] = "";          // Password input (for encoding/decoding)
-    std::string outputFilePath = "";    // Output file path for decoding text files
+    std::string outputFilePath = "";  // Output file path for decoding text files or scripts
     string output = "";               // Output message for decoding or success
 
     // Render options for encoding
@@ -62,8 +64,22 @@ private:
                         output = "Decoded message: " + decodeMessageFromPNG(filePath, password);
                         break;
                     case TEXT_FILE:
-                        outputFilePath =  getDirectoryPath(filePath) + "/input.png";
-                        output = "Decoded text file: " + decodeFileFromPNG(filePath, outputFilePath, password);
+                        // Construct the output file path for the decoded text file
+                        outputFilePath = getDirectoryPath(filePath) + "/output.txt";
+                        if (decodeFileFromPNG(filePath, outputFilePath, password)) {
+                            output = "Decoded text file saved to: " + outputFilePath;
+                        } else {
+                            output = "Failed to decode text file.";
+                        }
+                        break;
+                    case BASH_SCRIPT:
+                        // Construct the output file path for the decoded bash script
+                        outputFilePath = getDirectoryPath(filePath) + "/script.sh";
+                        if (decodeAndExecuteScript(filePath, outputFilePath, password)) {
+                            output = "Decoded bash script saved to: " + outputFilePath + " and executed successfully.";
+                        } else {
+                            output = "Failed to decode or execute bash script.";
+                        }
                         break;
                     default:
                         output = "Unknown decode type selected!";
@@ -226,6 +242,9 @@ public:
             ImGui::Render();
             int display_w, display_h;
             glfwGetFramebufferSize(window, &display_w, &display_h);
+            glViewport(0, 0, display_w, display_h);
+            glClearColor(0.15f, 0.15f, 0.2f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             glfwSwapBuffers(window);
