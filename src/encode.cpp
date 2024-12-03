@@ -16,8 +16,7 @@ std::string encodeMessage(const std::string& targetFilePath, const std::string& 
     namespace fs = std::filesystem;
 
     if (!fs::exists(targetFilePath)) {
-        std::cerr << "Error: Input file does not exist." << std::endl;
-        return;
+        return "Error: Input file does not exist.";
     }
 
     fs::path inputPath(targetFilePath);
@@ -43,8 +42,7 @@ std::string encodeText(const std::string& targetFilePath, const std::string& tex
     namespace fs = std::filesystem;
 
     if (!fs::exists(targetFilePath)) {
-        std::cerr << "Error: Input file does not exist." << std::endl;
-        return;
+        return "Error: Input file does not exist.";
     }
     fs::path inputPath(targetFilePath);
     fs::path outputImagePath = inputPath.parent_path() / (inputPath.stem().string() + "_encoded" + inputPath.extension().string());
