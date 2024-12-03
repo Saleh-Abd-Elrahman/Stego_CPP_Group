@@ -45,6 +45,24 @@ private:
         ImGui::InputText("Password", password, sizeof(password), ImGuiInputTextFlags_Password);
     }
 
+    // Render options for decoding
+    void RenderDecodeOptions() {
+        ImGui::Text("Select what you want to decode:");
+            if (ImGui::RadioButton("Message", decodeType == MESSAGE)) {
+                decodeType = MESSAGE;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Text File", decodeType == TEXT_FILE)) {
+                decodeType = TEXT_FILE;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Bash Script", decodeType == BASH_SCRIPT)) {
+                decodeType = BASH_SCRIPT;
+            }
+            // Password input
+            ImGui::Text("Enter the password used for encoding:");
+            ImGui::InputText("Password", password, sizeof(password), ImGuiInputTextFlags_Password);
+    }
     // Handle form submission
     void HandleSubmit() {
         try {
@@ -138,21 +156,7 @@ public:
             RenderEncodeOptions();
         }
         else {
-            ImGui::Text("Select what you want to decode:");
-            if (ImGui::RadioButton("Message", decodeType == MESSAGE)) {
-                decodeType = MESSAGE;
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Text File", decodeType == TEXT_FILE)) {
-                decodeType = TEXT_FILE;
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Bash Script", decodeType == BASH_SCRIPT)) {
-                decodeType = BASH_SCRIPT;
-            }
-            // Password input
-            ImGui::Text("Enter the password used for encoding:");
-            ImGui::InputText("Password", password, sizeof(password), ImGuiInputTextFlags_Password);
+            RenderDecodeOptions();
         }
         
 
