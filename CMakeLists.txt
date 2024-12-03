@@ -8,17 +8,15 @@ set(CMAKE_CXX_STANDARD 17)
 enable_language(OBJC)
 set(CMAKE_OBJC_FLAGS "${CMAKE_C_FLAGS}")
 
-# Include directories for header files
+# Include project directories 
 include_directories(include)
-
-# Add libraries
-add_subdirectory(libs)
-
-# Include directories
 include_directories(src)
 
 # Find and include GLFW
 find_package(GLFW3 REQUIRED)
+
+# Find and include IMGUI
+find_package(imgui REQUIRED)
 
 # Specify source files
 set(SOURCES
@@ -31,5 +29,4 @@ set(SOURCES
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} IMGUI SDL3-shared glfw)
-
+target_link_libraries(${PROJECT_NAME} imgui::imgui SDL2 glfw)
