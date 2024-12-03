@@ -6,6 +6,8 @@
 #include <string>
 #include "encode.h"
 #include "decode.h"
+#include "decoder_PNG.h"
+#include "file_utils.h"
 
 using namespace std;
 
@@ -15,12 +17,16 @@ private:
     // State variables
     bool encode = true;               // Toggle between Encode/Decode
     bool encodeTextFile = false;      // Toggle between encoding a message or a text file
+    enum DecodeType { MESSAGE, TEXT_FILE, BASH_SCRIPT };
+    DecodeType decodeType = MESSAGE;
+
     
     // Use of C-style strings for input fields (ImGui doesn't support std::string)
     char filePath[512] = "";          // File path input (target file for encoding/decoding)
     char textFilePath[512] = "";      // Text file path input (for encoding text files)
     char message[512] = "";           // Message input (for encoding messages)
     char password[512] = "";          // Password input (for encoding/decoding)
+    char outputFilePath[512] = "";    // Output file path for decoding text files
     string output = "";               // Output message for decoding or success
 
     // Render options for encoding
@@ -45,19 +51,30 @@ private:
             if (encode) {
                 if (encodeTextFile) {
                     string result = encodeText(filePath, textFilePath, password);
-                    
                     output = "Text file encoded successfully: " + result;
                 } else {
                     string result = encodeMessage(filePath, message, password);
                     output = "Message encoded successfully: " + result;
                 }
             } else {
-                output = "Decoded message: " + decode(filePath);
+                switch (decodeType) {
+                    case MESSAGE:
+                        output = "Decoded message: " + decodeMessageFromPNG(filePath, password);
+                        break;
+                    case TEXT_FILE:
+                        outputFilePath =  getDirectoryPath(filePath);
+                        output = "Decoded text file: " + decodeFileFromPNG(filePath, outputFilePath, password);
+                        break;
+                    default:
+                        output = "Unknown decode type selected!";
+                        break;
+                }
             }
         } catch (const exception& e) {
             output = "Error: " + string(e.what());
         }
     }
+
 
     // Render the output message
     void RenderOutput() {
@@ -121,6 +138,18 @@ public:
             RenderEncodeOptions();
         }
         else {
+            ImGui::Text("Select what you want to decode:");
+            if (ImGui::RadioButton("Message", decodeType == MESSAGE)) {
+                decodeType = MESSAGE;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Text File", decodeType == TEXT_FILE)) {
+                decodeType = TEXT_FILE;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Bash Script", decodeType == BASH_SCRIPT)) {
+                decodeType = BASH_SCRIPT;
+            }
             // Password input
             ImGui::Text("Enter the password used for encoding:");
             ImGui::InputText("Password", password, sizeof(password), ImGuiInputTextFlags_Password);
