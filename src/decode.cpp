@@ -19,6 +19,7 @@ std::string decodeMessage(const std::string& filePath, const std::string& passwo
         return decodeMessageFromPNG(filePath, password);
     } else if (fileExtension == "wav") {
         return Steganography::decodeMessageInWAV(filePath, password);
+        return Steganography::decodeMessageInWAV(filePath, password);
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
@@ -45,6 +46,7 @@ std::string decodeFile(const std::string& filePath, const std::string& password)
             return "Failed to decode text file.";
         }
     } else if (fileExtension == "wav") {
+        if (Steganography::decodeFileInWAV(filePath, outputFilePath, password)) {
         if (Steganography::decodeFileInWAV(filePath, outputFilePath, password)) {
             return "Decoded text file saved to: " + outputFilePath.string();
         } else {
@@ -78,6 +80,7 @@ std::string decodeBashScript(const std::string& filePath, const std::string& pas
             return "Failed to decode bash scipt.";
         }
     } else if (fileExtension == "wav") {
+        if (Steganography::decodeFileInWAV(filePath, outputFilePath, password)) {
         if (Steganography::decodeFileInWAV(filePath, outputFilePath, password)) {
             return "Decoded text file saved to: " + outputFilePath.string();
         } else {
