@@ -16,15 +16,13 @@ std::string Steganography::decodeMessage(const std::string& inputWav,
 
     // Ensure password is exactly 8 characters
     if (password.size() != 8) {
-        std::cerr << "Error: Password must be exactly 8 characters long." << std::endl;
-        return "";
+        return "Error: Password must be exactly 8 characters long.";
     }
 
     // Open input WAV file
     SndfileHandle inputFile(inputWav);
     if (inputFile.error()) {
-        std::cerr << "Error reading input WAV file: " << inputFile.strError() << std::endl;
-        return "";
+        return "Error reading input WAV file: " + std::string(inputFile.strError());
     }
 
     // Read audio samples
@@ -39,8 +37,7 @@ std::string Steganography::decodeMessage(const std::string& inputWav,
 
     // Read the first 32 bits to get the message length
     if (binaryData.size() < 32 + 64) { // 32 bits length + 64 bits password
-        std::cerr << "Error: Not enough data to read message length and password." << std::endl;
-        return "";
+        return "Error: Not enough data to read message length and password.";
     }
 
     uint32_t messageLength = 0;

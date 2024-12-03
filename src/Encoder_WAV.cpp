@@ -15,8 +15,7 @@ bool Steganography::encodeMessageInWAV(const std::string& inputWav,
 
     // Ensure password is exactly 8 characters
     if (password.size() != 8) {
-        std::cerr << "Error: Password must be exactly 8 characters long." << std::endl;
-        return false;
+        return "Error: Password must be exactly 8 characters long.";
     }
 
     // Scramble the password using Vigenère Cipher
@@ -47,8 +46,7 @@ bool Steganography::encodeMessageInWAV(const std::string& inputWav,
     // Open input WAV file
     SndfileHandle inputFile(inputWav);
     if (inputFile.error()) {
-        std::cerr << "Error reading input WAV file: " << inputFile.strError() << std::endl;
-        return false;
+        return "Error reading input WAV file: " + std::string(inputFile.strError());
     }
 
     // Read audio samples
@@ -57,8 +55,7 @@ bool Steganography::encodeMessageInWAV(const std::string& inputWav,
 
     // Check if the message can fit in the audio file
     if (fullBinaryData.size() > samples.size()) {
-        std::cerr << "Error: The audio file is too small to hold the entire data (length, password, message)." << std::endl;
-        return false;
+        return "Error: The audio file is too small to hold the entire data (length, password, message)." ;
     }
 
     // Encode message into LSB of audio samples
@@ -70,8 +67,7 @@ bool Steganography::encodeMessageInWAV(const std::string& inputWav,
     // Write modified samples to output WAV file
     SndfileHandle outputFile(outputWav, SFM_WRITE, inputFile.format(), inputFile.channels(), inputFile.samplerate());
     if (outputFile.error()) {
-        std::cerr << "Error writing output WAV file: " << outputFile.strError() << std::endl;
-        return false;
+        return "Error writing output WAV file: " + std::string(outputFile.strError());
     }
     outputFile.write(&samples[0], samples.size());
 
@@ -87,15 +83,13 @@ bool Steganography::encodeFileInWAV(const std::string& inputWav,
 
     // Ensure password is exactly 8 characters
     if (password.size() != 8) {
-        std::cerr << "Error: Password must be exactly 8 characters long." << std::endl;
-        return false;
+        return "Error: Password must be exactly 8 characters long.";
     }
 
     // Read the input file as binary
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     if (!inputFile) {
-        std::cerr << "Error: Unable to open input file " << inputFilePath << std::endl;
-        return false;
+        return "Error: Unable to open input file " + inputFilePath;
     }
     std::string fileData((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
     inputFile.close();
@@ -128,8 +122,7 @@ bool Steganography::encodeFileInWAV(const std::string& inputWav,
     // Open input WAV file
     SndfileHandle wavInputFile(inputWav);
     if (wavInputFile.error()) {
-        std::cerr << "Error reading input WAV file: " << wavInputFile.strError() << std::endl;
-        return false;
+        return "Error reading input WAV file: " + std::string(wavInputFile.strError());
     }
 
     // Read audio samples
@@ -138,8 +131,7 @@ bool Steganography::encodeFileInWAV(const std::string& inputWav,
 
     // Check if the file can fit in the audio file
     if (fullBinaryData.size() > samples.size()) {
-        std::cerr << "Error: The audio file is too small to hold the entire data (length, password, file)." << std::endl;
-        return false;
+        return "Error: The audio file is too small to hold the entire data (length, password, file).";
     }
 
     // Encode file data into LSB of audio samples
@@ -151,8 +143,7 @@ bool Steganography::encodeFileInWAV(const std::string& inputWav,
     // Write modified samples to output WAV file
     SndfileHandle wavOutputFile(outputWav, SFM_WRITE, wavInputFile.format(), wavInputFile.channels(), wavInputFile.samplerate());
     if (wavOutputFile.error()) {
-        std::cerr << "Error writing output WAV file: " << wavOutputFile.strError() << std::endl;
-        return false;
+        return "Error writing output WAV file: " + std::string(wavOutputFile.strError());
     }
     wavOutputFile.write(&samples[0], samples.size());
 
