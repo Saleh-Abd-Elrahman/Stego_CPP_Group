@@ -1,4 +1,4 @@
-PROJECT_NAME           = "QRGuardPro"
+PROJECT_NAME           = "HideAway++"
 OUTPUT_DIRECTORY       = @CMAKE_BINARY_DIR@/docs
 INPUT                  = @CMAKE_SOURCE_DIR@
 FILE_PATTERNS          = *.cpp *.h

@@ -1,4 +1,4 @@
-name: steganography_env
+name: steganography_envi
 channels:
   - conda-forge
   - defaults

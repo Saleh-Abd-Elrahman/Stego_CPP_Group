@@ -5,8 +5,8 @@
 #include <string>
 
 int main() {
-    std::string inputImagePath = "../images/input.png";
-    std::string outputImagePath = "../images/output.png";
+    std::string inputImagePath = "../external/input.png";
+    std::string outputImagePath = "../external/output.png";
     std::string message = "Hello, Stego!";
     std::string passwordEncode = "Passw0rd"; // Must be 8 characters
     std::string passwordDecode = "Passw0rd"; // Must be 8 characters
