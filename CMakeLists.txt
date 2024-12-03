@@ -1,12 +1,16 @@
-cmake_minimum_required(VERSION 3.10)
-project(CPPSTEGANOGRAPHY)
+# Specify the minimum CMake version and project metadata
+cmake_minimum_required(VERSION 3.20) # Minimum version of CMake required
+project(CPPSTEGANOGRAPHY VERSION 1.0) # Project name and version
 
-# Set C++ standard
+# Set the C++ standard
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# MacOS specific settings
-enable_language(OBJC)
-set(CMAKE_OBJC_FLAGS "${CMAKE_C_FLAGS}")
+# Enable Objective-C language for MacOS if needed
+if(APPLE)
+    enable_language(OBJC)
+    set(CMAKE_OBJC_FLAGS "${CMAKE_C_FLAGS}")
+endif()
 
 # Include project directories 
 include_directories(include)
@@ -24,6 +28,11 @@ set(SOURCES
     src/encode.cpp
     src/decode.cpp
 )
+
+# Add subdirectories for modular builds and testing
+add_subdirectory(src)
+enable_testing()
+add_subdirectory(test)
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
