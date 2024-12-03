@@ -46,7 +46,8 @@ bool Steganography::encodeMessageInWAV(const std::string& inputWav,
     // Open input WAV file
     SndfileHandle inputFile(inputWav);
     if (inputFile.error()) {
-        return "Error reading input WAV file: " + std::string(inputFile.strError());
+        std::cerr << "Error reading input WAV file: " << inputFile.strError() << std::endl;
+        return false;
     }
 
     // Read audio samples
@@ -55,7 +56,8 @@ bool Steganography::encodeMessageInWAV(const std::string& inputWav,
 
     // Check if the message can fit in the audio file
     if (fullBinaryData.size() > samples.size()) {
-        return "Error: The audio file is too small to hold the entire data (length, password, message)." ;
+        std::cerr << "Error: The audio file is too small to hold the entire data (length, password, message)." << std::endl;
+        return false;
     }
 
     // Encode message into LSB of audio samples
@@ -67,7 +69,8 @@ bool Steganography::encodeMessageInWAV(const std::string& inputWav,
     // Write modified samples to output WAV file
     SndfileHandle outputFile(outputWav, SFM_WRITE, inputFile.format(), inputFile.channels(), inputFile.samplerate());
     if (outputFile.error()) {
-        return "Error writing output WAV file: " + std::string(outputFile.strError());
+        std::cerr << "Error writing output WAV file: " << outputFile.strError() << std::endl;
+        return false;
     }
     outputFile.write(&samples[0], samples.size());
 
@@ -83,13 +86,15 @@ bool Steganography::encodeFileInWAV(const std::string& inputWav,
 
     // Ensure password is exactly 8 characters
     if (password.size() != 8) {
-        return "Error: Password must be exactly 8 characters long.";
+        std::cerr << "Error: Password must be exactly 8 characters long." << std::endl;
+        return false;
     }
 
     // Read the input file as binary
     std::ifstream inputFile(inputFilePath, std::ios::binary);
     if (!inputFile) {
-        return "Error: Unable to open input file " + inputFilePath;
+        std::cerr << "Error: Unable to open input file " << inputFilePath << std::endl;
+        return false;
     }
     std::string fileData((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
     inputFile.close();
@@ -122,7 +127,8 @@ bool Steganography::encodeFileInWAV(const std::string& inputWav,
     // Open input WAV file
     SndfileHandle wavInputFile(inputWav);
     if (wavInputFile.error()) {
-        return "Error reading input WAV file: " + std::string(wavInputFile.strError());
+        std::cerr << "Error reading input WAV file: " << wavInputFile.strError() << std::endl;
+        return false;
     }
 
     // Read audio samples
@@ -131,7 +137,8 @@ bool Steganography::encodeFileInWAV(const std::string& inputWav,
 
     // Check if the file can fit in the audio file
     if (fullBinaryData.size() > samples.size()) {
-        return "Error: The audio file is too small to hold the entire data (length, password, file).";
+        std::cerr << "Error: The audio file is too small to hold the entire data (length, password, file)." << std::endl;
+        return false;
     }
 
     // Encode file data into LSB of audio samples
@@ -143,7 +150,8 @@ bool Steganography::encodeFileInWAV(const std::string& inputWav,
     // Write modified samples to output WAV file
     SndfileHandle wavOutputFile(outputWav, SFM_WRITE, wavInputFile.format(), wavInputFile.channels(), wavInputFile.samplerate());
     if (wavOutputFile.error()) {
-        return "Error writing output WAV file: " + std::string(wavOutputFile.strError());
+        std::cerr << "Error writing output WAV file: " << wavOutputFile.strError() << std::endl;
+        return false;
     }
     wavOutputFile.write(&samples[0], samples.size());
 
