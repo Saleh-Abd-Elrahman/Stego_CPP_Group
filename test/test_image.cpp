@@ -1,5 +1,5 @@
-#include "encoder.h"
-#include "decoder.h"
+#include "encoder_PNG.h"
+#include "decoder_PNG.h"
 #include <iostream>
 #include <fstream>
 #include <string>
