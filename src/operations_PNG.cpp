@@ -1,7 +1,7 @@
 #include "operations_PNG.h"
 #include "encoder_PNG.h"
 #include "decoder_PNG.h"
-#include "Steganography.h"
+#include "WAV.h"
 #include <iostream>
 #include <fstream>
 #include <string>

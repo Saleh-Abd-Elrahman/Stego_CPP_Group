@@ -1,4 +1,4 @@
-#include "wav.h"
+#include "WAV.h"
 #include "vigenere_WAV.h"
 #include <sndfile.hh>
 #include <vector>
