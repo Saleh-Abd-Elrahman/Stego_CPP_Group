@@ -1,4 +1,4 @@
-#include "Steganography.h"
+#include "wav.h"
 #include "vigenere_WAV.h"
 #include <sndfile.hh>
 #include <vector>
@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-bool Steganography::encodeMessage(const std::string& inputWav, 
+bool Steganography::encodeMessageInWAV(const std::string& inputWav, 
                                   const std::string& outputWav, 
                                   const std::string& message, 
                                   const std::string& password) {
@@ -78,7 +78,7 @@ bool Steganography::encodeMessage(const std::string& inputWav,
     return true;
 }
 
-bool Steganography::encodeFile(const std::string& inputWav, 
+bool Steganography::encodeFileInWAV(const std::string& inputWav, 
                                const std::string& outputWav, 
                                const std::string& inputFilePath, 
                                const std::string& password) {

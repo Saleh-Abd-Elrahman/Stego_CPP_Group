@@ -24,7 +24,7 @@ public:
      * @param password An 8-character password used to encrypt the message.
      * @return `true` if encoding is successful; `false` otherwise.
      */
-    static bool encodeMessage(const std::string& inputWav, 
+    static bool encodeMessageInWAV(const std::string& inputWav, 
                               const std::string& outputWav, 
                               const std::string& message, 
                               const std::string& password);
@@ -39,7 +39,7 @@ public:
      * @param password The 8-character password used during encoding to decrypt the message.
      * @return The decoded message as a `std::string` if successful; an empty string otherwise.
      */
-    static std::string decodeMessage(const std::string& inputWav, 
+    static std::string decodeMessageInWAV(const std::string& inputWav, 
                                      const std::string& password);
 
     /**
@@ -54,7 +54,7 @@ public:
      * @param password An 8-character password used to encrypt the file data.
      * @return `true` if encoding is successful; `false` otherwise.
      */
-    static bool encodeFile(const std::string& inputWav, 
+    static bool encodeFileInWAV(const std::string& inputWav, 
                            const std::string& outputWav, 
                            const std::string& inputFilePath, 
                            const std::string& password);
@@ -71,7 +71,7 @@ public:
      * @param password The 8-character password used during encoding to decrypt the file data.
      * @return `true` if decoding is successful; `false` otherwise.
      */
-    static bool decodeFile(const std::string& inputWav, 
+    static bool decodeFileInWAV(const std::string& inputWav, 
                            const std::string& outputFilePath, 
                            const std::string& password);
 

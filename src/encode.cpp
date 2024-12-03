@@ -1,6 +1,7 @@
 #include "encode.h"
 #include "file_utils.h"
 #include "encoder_PNG.h"
+#include "wav.h"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -24,11 +25,10 @@ std::string encodeMessage(const std::string& targetFilePath, const std::string& 
 
     if (fileExtension == "png") {
         encodeMessageInPNG(targetFilePath, outputImagePath, message, password);
-        return "Encoded text file into PNG: " + targetFilePath;
+        return "Encoded text file into PNG: " + outputImagePath;
     } else if (fileExtension == "wav") {
-        // Add logic for encoding text content into a WAV file
-        //encodeMessageInWAV(targetFilePath, directoryPath, message, password);
-        return "Encoded text file into WAV: " + targetFilePath;
+        encodeMessageInWAV(targetFilePath, outputImagePath, message, password);
+        return "Encoded text file into WAV: " + outputImagePath;
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);
     }
@@ -45,7 +45,7 @@ std::string encodeText(const std::string& targetFilePath, const std::string& tex
         return "Error: Input file does not exist.";
     }
     fs::path inputPath(targetFilePath);
-    fs::path outputImagePath = inputPath.parent_path() / (inputPath.stem().string() + "_encoded" + inputPath.extension().string());
+    fs::path outputPath = inputPath.parent_path() / (inputPath.stem().string() + "_encoded" + inputPath.extension().string());
     
     if (fileExtension == "png") {
         // Read the content of the input file in binary mode
@@ -55,12 +55,11 @@ std::string encodeText(const std::string& targetFilePath, const std::string& tex
         }
         std::string fileContent((std::istreambuf_iterator<char>(inFile)),  std::istreambuf_iterator<char>());
         inFile.close();
-        encodeMessageInPNG(targetFilePath, outputImagePath, fileContent, password);
+        encodeMessageInPNG(targetFilePath, outputPath, fileContent, password);
 
         return "Encoded text file into PNG: " + targetFilePath;
     } else if (fileExtension == "wav") {
-        // Add logic for encoding text content into a WAV file
-        //encodeMessageInWAV(targetFilePath, directoryPath, message, password);
+        encodeFileInWAV(targetFilePath, outputPath, textFilePath, password);
         return "Encoded text file into WAV: " + targetFilePath;
     } else {
         throw std::runtime_error("Unsupported file format: " + fileExtension);

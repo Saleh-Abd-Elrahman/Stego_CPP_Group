@@ -17,7 +17,7 @@ class MainWindow {
 private:
     // State variables
     bool encode = true;               // Toggle between Encode/Decode
-    enum Type { MESSAGE, TEXT_FILE, BASH_SCRIPT };
+    enum Type { MESSAGE, TEXT_FILE, BASH_SCRIPT};
     Type decodeType = MESSAGE;
     Type encodeType = MESSAGE;
 
@@ -111,11 +111,9 @@ private:
                         output = "Decoded message: " + decodeMessage(filePath, password);
                         break;
                     case TEXT_FILE:
-                        // Construct the output file path for the decoded text file
                         output = decodeFile(filePath, password);
                         break;
                     case BASH_SCRIPT:
-                        // Construct the output file path for the decoded bash script
                         output = decodeBashScript(filePath, password);
                         break;
                     default:
