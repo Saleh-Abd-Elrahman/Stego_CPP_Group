@@ -22,10 +22,11 @@ void encodeMessageInPNG(const std::string& inputImagePath,
 
     // Scramble the password using Vigenère Cipher
     std::string scrambledPassword = encryptVigenere(password, vigenereKey);
-
+    
     // Combine scrambled password with the message
     // Format: [32 bits length][64 bits scrambled password][message bits]
     uint32_t messageLength = message.size();
+    std::cout << "Message Length: " << messageLength  << std::endl;
     std::string binaryLength;
     for (int i = 31; i >= 0; i--) {
         binaryLength += ((messageLength >> i) & 1) ? '1' : '0';
@@ -119,7 +120,7 @@ void encodeMessageInPNG(const std::string& inputImagePath,
         // Check if image can hold the data
         size_t maxCapacity = width * height; // One bit per pixel (using the blue channel's LSB)
         size_t totalDataBits = fullBinaryData.size(); // Already includes length and password
-
+        std::cout << "Maxcapacity" << maxCapacity << ", Total Data Bits: " << totalDataBits << std::endl;
         if (totalDataBits > maxCapacity) {
             std::cerr << "Error: The image is too small to hold the entire data (length, password, message)." << std::endl;
             return;
@@ -150,6 +151,7 @@ bool encodeFileInPNG(const std::string& inputImagePath,
     std::string fileContent((std::istreambuf_iterator<char>(inFile)),
                              std::istreambuf_iterator<char>());
     inFile.close();
+    std::cout << "File Content: " << fileContent << std::endl;
 
     // Proceed to encode the file content into the PNG
     encodeMessageInPNG(inputImagePath, outputImagePath, fileContent, password);

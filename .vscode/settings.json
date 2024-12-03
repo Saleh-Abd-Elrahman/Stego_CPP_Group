@@ -1,5 +1,7 @@
 {
     "files.associations": {
+        "*.py": "python",
+        "*.cxx": "cpp",
         "__bit_reference": "cpp",
         "__config": "cpp",
         "__hash_table": "cpp",
@@ -61,6 +63,9 @@
         "variant": "cpp",
         "vector": "cpp",
         "algorithm": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "print": "cpp",
+        "queue": "cpp",
+        "stack": "cpp"
     }
 }

@@ -8,7 +8,6 @@
 #include <string>
 #include "encode.h"
 #include "decode.h"
-#include "decoder_PNG.h"
 #include "file_utils.h"
 
 using namespace std;
@@ -28,7 +27,7 @@ private:
     char textFilePath[512] = "";      // Text file path input (for encoding text files)
     char message[512] = "";           // Message input (for encoding messages)
     char password[512] = "";          // Password input (for encoding/decoding)
-    std::string outputFilePath = "";  // Output file path for decoding text files or scripts
+    string outputFilePath = "";  // Output file path for decoding text files or scripts
     string output = "";               // Output message for decoding or success
 
     // Render options for encoding
@@ -112,24 +111,14 @@ private:
             } else {
                 switch (decodeType) {
                     case MESSAGE:
-                        output = "Decoded message: " + decodeMessageFromPNG(filePath, password);
+                        output = "Decoded message: " + decodeMessage(filePath, password);
                         break;
                     case TEXT_FILE:
                         // Construct the output file path for the decoded text file
-                        if (decodeFileFromPNG(filePath, outputFilePath, password)) {
-                            output = "Decoded text file saved to: " + outputFilePath;
-                        } else {
-                            output = "Failed to decode text file.";
-                        }
+                        outputFilePath = decodeFile(filePath, password);
+                        output = "Decoded text file saved to: " + outputFilePath;
                         break;
-                    case BASH_SCRIPT:
-                        // Construct the output file path for the decoded bash script
-                        if (decodeAndExecuteScript(filePath, outputFilePath, password)) {
-                            output = "Decoded bash script saved to: " + outputFilePath + " and executed successfully.";
-                        } else {
-                            output = "Failed to decode or execute bash script.";
-                        }
-                        break;
+                    
                     default:
                         output = "Unknown decode type selected!";
                         break;

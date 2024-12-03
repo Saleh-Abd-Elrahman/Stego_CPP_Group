@@ -4,6 +4,7 @@
 #include <string>
 
 // Function declaration
-std::string decode(const std::string& filePath);
-
+std::string decodeMessage(const std::string& filePath, const std::string& password) ;
+std::string decodeFile(const std::string& filePath, const std::string& password);
+std::string decodeBashScript(const std::string& filePath, const std::string& password);
 #endif // DECODE_H

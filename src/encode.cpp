@@ -49,11 +49,11 @@ std::string encodeText(const std::string& targetFilePath, const std::string& tex
     
     if (fileExtension == "png") {
         // Read the content of the input file in binary mode
-        std::ifstream inFile(targetFilePath, std::ios::binary);
+        std::ifstream inFile(textFilePath, std::ios::binary);
         if (!inFile) {
-            return "Error: Unable to open file " + targetFilePath;
+            return "Error: Unable to open file " + textFilePath;
         }
-        std::string fileContent((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
+        std::string fileContent((std::istreambuf_iterator<char>(inFile)),  std::istreambuf_iterator<char>());
         inFile.close();
         encodeMessageInPNG(targetFilePath, outputImagePath, fileContent, password);
 
