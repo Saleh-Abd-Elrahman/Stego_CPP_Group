@@ -18,3 +18,4 @@ set_target_properties(my_executable PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_
 # Link the main library and PNG to the executable
 target_link_libraries(my_executable main_library ${PNG_LIBRARIES})
 target_link_libraries(main_library ${PNG_LIBRARIES}) 
+target_link_libraries(main_library imgui::imgui SDL2 glfw)

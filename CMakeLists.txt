@@ -33,9 +33,7 @@ find_package(imgui REQUIRED)
 add_subdirectory(src)
 enable_testing()
 add_subdirectory(test)
-
-# Create the executable
-add_executable(${PROJECT_NAME} ${SOURCES})
+ 
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} imgui::imgui SDL2 glfw)
+

@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <string>
+#include <iostream>
 
 // Encode a message
 std::string encodeMessage(const std::string& targetFilePath, const std::string& message, const std::string& password) {
@@ -11,7 +13,7 @@ std::string encodeMessage(const std::string& targetFilePath, const std::string& 
     std::string fileExtension = getFileExtension(targetFilePath);
     std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
 
-    std::string directoryPath = getDirectoryPath(filePath);
+    std::string directoryPath = getDirectoryPath(targetFilePath);
     if (!directoryPath.empty()) {
         std::cout << "Directory Path: " << directoryPath << std::endl;
     } else {
@@ -35,7 +37,7 @@ std::string encodeText(const std::string& targetFilePath, const std::string& tex
     std::string fileExtension = getFileExtension(targetFilePath);
     std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
 
-    std::string directoryPath = getDirectoryPath(filePath);
+    std::string directoryPath = getDirectoryPath(targetFilePath);
     if (!directoryPath.empty()) {
         std::cout << "Directory Path: " << directoryPath << std::endl;
     } else {
